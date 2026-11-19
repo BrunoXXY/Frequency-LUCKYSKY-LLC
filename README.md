@@ -1,1 +1,3 @@
-# Frequency-LUCKYSKY-LLC
+# Generátor Šťastia
+
+Lucky Sky LLC

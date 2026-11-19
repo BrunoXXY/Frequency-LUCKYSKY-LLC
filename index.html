@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Šťastie">
+<meta name="theme-color" content="#0a1124">
+<title>Generátor Šťastia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one calm night column. A hero with the beat number, its brainwave band and the play button, then cards for frequencies, sounds, volume and timer. */
+:root {
+  --bg: #090f21;
+  --surface: #111a34;
+  --surface-2: #19254a;
+  --line: #28386a;
+  --text: #e9edf9;
+  --muted: #93a0c6;
+  --accent: #7fd6c2;
+  --accent-ink: #062019;
+  --amber: #f0b96b;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); }
+body { min-height: 100%; padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(30px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+main { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-family: var(--display); font-weight: 600; font-size: 22px; margin: 6px 2px 0; letter-spacing: -0.005em; color: var(--muted); }
+
+.hero { background: radial-gradient(120% 90% at 50% 0%, #1b2b5a 0%, var(--surface) 62%); border: 1px solid var(--line); border-radius: 26px; padding: 22px 18px 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.beat-big { display: flex; align-items: baseline; gap: 8px; font-family: var(--display); font-variant-numeric: tabular-nums; }
+.beat-big b { font-size: 64px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+.beat-big small { font-size: 22px; color: var(--muted); }
+.band { font-size: 15px; color: var(--accent); margin-top: -8px; text-align: center; }
+
+.scale { width: 100%; position: relative; padding-top: 6px; }
+.segs { display: flex; gap: 3px; height: 10px; }
+.seg { background: var(--surface-2); border-radius: 5px; transition: background .2s; }
+.seg[data-on="1"] { background: var(--accent); }
+.marker { position: absolute; top: 0; width: 2px; height: 22px; background: var(--text); border-radius: 2px; transform: translateX(-1px); transition: left .15s; }
+.seglabels { display: flex; gap: 3px; margin-top: 6px; font-size: 11px; color: var(--muted); }
+.seglabels span { text-align: center; overflow: visible; white-space: nowrap; }
+
+.playwrap { position: relative; width: 112px; height: 112px; margin: 6px 0 2px; }
+#play { position: relative; z-index: 1; width: 112px; height: 112px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; cursor: pointer; transition: transform .08s, background .2s; }
+#play:active { transform: scale(.96); }
+#play svg { width: 40px; height: 40px; fill: currentColor; }
+#play .i-stop, #play .i-busy { display: none; }
+#play[data-state="on"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 2px var(--accent); }
+#play[data-state="on"] .i-play, #play[data-state="busy"] .i-play { display: none; }
+#play[data-state="on"] .i-stop { display: block; }
+#play[data-state="busy"] { background: var(--surface-2); color: var(--muted); }
+#play[data-state="busy"] .i-busy { display: block; animation: spin 1s linear infinite; }
+.ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--accent); opacity: 0; pointer-events: none; }
+.playwrap[data-on="1"] .ring { animation: pulse 3.2s ease-out infinite; }
+.playwrap[data-on="1"] .ring.r2 { animation-delay: 1.6s; }
+@keyframes pulse { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(1.55); opacity: 0; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#status { min-height: 20px; font-size: 14px; color: var(--muted); text-align: center; text-wrap: balance; }
+#left { min-height: 18px; font-size: 14px; color: var(--amber); font-variant-numeric: tabular-nums; margin-top: -8px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.card h2 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+
+.freqs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.freq { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.freq label { font-size: 13px; color: var(--muted); }
+.stepper { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; gap: 5px; }
+.stepper button { border: 1px solid var(--line); background: var(--surface-2); color: var(--text); border-radius: 12px; font-size: 20px; line-height: 1; cursor: pointer; padding: 0; min-height: 52px; }
+.stepper button:active { background: var(--line); }
+.stepper input { width: 100%; min-width: 0; text-align: center; border: 1px solid var(--line); background: var(--bg); color: var(--text); border-radius: 12px; font: 600 24px var(--display); padding: 10px 2px; font-variant-numeric: tabular-nums; }
+.unit { font-size: 12px; color: var(--muted); text-align: center; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: var(--surface-2); color: var(--text); border-radius: 999px; padding: 9px 14px; font: 500 14px var(--body); cursor: pointer; min-height: 40px; }
+.chip small { color: var(--muted); font-size: 12px; margin-left: 4px; }
+.chip[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+.hint { margin: 0; font-size: 13px; line-height: 1.45; color: var(--amber); }
+.hint:empty { display: none; }
+.foot { text-align: center; margin: 22px 0 8px; font-size: 13px; letter-spacing: .08em; color: var(--muted); }
+.zone { margin: 0 0 14px; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
+.zone h4 { margin: 0 0 4px; font-size: 14.5px; color: var(--text); }
+.zone h4 span { color: #7fd6c4; font-weight: 600; margin-right: 6px; }
+.zone p { margin: 0; }
+.info .fq { margin: 8px 0 0; padding: 0; list-style: none; }
+.info .fq li { margin: 0 0 5px; padding-left: 0; }
+.info .fq b { color: var(--text); }
+.tip { margin: -4px 2px 14px; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+.tip b { color: var(--text, #e8ecff); }
+.info h3 { margin: 16px 0 6px; font-size: 14px; }
+.info p, .info li { font-size: 13.5px; line-height: 1.6; color: var(--muted); margin: 0 0 8px; }
+.info ul { margin: 0 0 8px; padding-left: 18px; }
+.info table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 6px 0 10px; }
+.info td, .info th { text-align: left; padding: 7px 6px; border-bottom: 1px solid rgba(255,255,255,.08); vertical-align: top; color: var(--muted); }
+.info th { color: inherit; font-weight: 600; }
+.note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+
+.row { display: grid; grid-template-columns: 24px 96px 1fr 44px; align-items: center; gap: 8px; }
+.row svg { width: 22px; height: 22px; stroke: var(--muted); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.row label { font-size: 15px; }
+.row output { font-size: 13px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.row.plain { grid-template-columns: 1fr 44px; }
+.row.plain .l { grid-column: 1 / -1; display: flex; justify-content: space-between; font-size: 15px; }
+.row.plain .l span { color: var(--muted); font-size: 13px; }
+input[type="range"] { width: 100%; accent-color: var(--accent); height: 32px; margin: 0; }
+
+.toggle { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+.toggle b { font-weight: 500; font-size: 15px; display: block; color: var(--text); }
+.toggle span { font-size: 12.5px; color: var(--muted); line-height: 1.4; display: block; margin-top: 2px; }
+.toggle input { width: 26px; height: 26px; accent-color: var(--accent); margin: 0; }
+
+details { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+details summary { cursor: pointer; padding: 6px 0; }
+details ul { margin: 6px 0 0; padding-left: 18px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<script>if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});</script>
+</head>
+<body>
+<main>
+  <h1>Generátor Šťastia</h1>
+  <section class="card info" aria-labelledby="h-how">
+    <h2 id="h-how">Svet, ktorý kmitá</h2>
+    <p>Zastav sa na chvíľu a započúvaj sa. Zvuk, ktorý počuješ, je kmitanie vzduchu, ktoré tvoje ucho premení na tón. Počet kmitov za sekundu sa volá frekvencia a meria sa v hertzoch (Hz). Ucho dospelého človeka počuje zhruba od 20 do 20 000 Hz.</p>
+    <p>A nie je to len zvuk. Svetlo je tiež kmitanie, len elektromagnetického poľa a oveľa rýchlejšie: stovky biliónov kmitov za sekundu. Tvoje srdce v pokoji bije približne raz za sekundu, teda okolo 1 Hz. Mozog vytvára elektrické vlny, ktoré vedci merajú prístrojom EEG a delia ich do pásiem. Aj samotná Zem má svoj rytmus: Schumannova rezonancia, kmitanie medzi zemským povrchom a ionosférou, sa pohybuje okolo 7,8 Hz.</p>
+    <p>Svet je teda plný rytmov. Tu si môžeš vybrať sám: od jedného čistého tónu až po dva tóny, z ktorých sa v tvojej hlave zrodí niečo nové. Prečítaj si pár riadkov a pusť sa do objavovania.</p>
+
+    <h3>Výprava za tónmi: od hlbokého basu po jasné výšky</h3>
+    <p>Každá výška má svoju náladu. Prejdi si ich zdola nahor. Pri každej nájdeš aj známe frekvencie, o ktorých sa hovorí najviac. Ich významy sú tradičné, nie vedecké, tak ich ber ako inšpiráciu na objavovanie.</p>
+    <div class="zone"><h4><span>50 – 100 Hz</span> Hlboký bas</h4><p>Skôr ho cítiš v tele než ušami. Slúchadlá ho prehrajú slabo, preto aplikácia sama dorovnáva hlasitosť.</p></div>
+    <div class="zone"><h4><span>100 – 200 Hz</span> Teplý spodok</h4><p>Hlboký a zaoblený tón, ktorý znie pokojne a vážne.</p><ul class="fq"><li><b>136,1 Hz</b> „Om", tradične tón Zeme, odvodený z jej ročného obehu okolo Slnka</li></ul></div>
+    <div class="zone"><h4><span>200 – 400 Hz</span> Mäkký stred</h4><p>Plný, hrejivý a príjemný. Na dlhé počúvanie je najlepší, preto sme tu nastavili aj základ 200 a 210 Hz.</p><ul class="fq"><li><b>285 Hz</b> Solfeggio: telo a regenerácia</li><li><b>396 Hz</b> Solfeggio: oslobodenie od strachu a viny</li></ul></div>
+    <div class="zone"><h4><span>400 – 700 Hz</span> Jasný stred</h4><p>Výraznejší a svetlejší tón, ktorý nesie viac energie.</p><ul class="fq"><li><b>417 Hz</b> Solfeggio: zmena a nový začiatok</li><li><b>432 Hz</b> alternatívne ladenie tónu A, ktoré mnohí vnímajú ako „prírodné"</li><li><b>440 Hz</b> komorné A, štandardný ladiaci tón v hudbe</li><li><b>528 Hz</b> Solfeggio: „frekvencia lásky", spája sa s premenou a harmóniou</li><li><b>639 Hz</b> Solfeggio: vzťahy, spojenie a láska k druhým</li></ul></div>
+    <div class="zone"><h4><span>700 – 968 Hz</span> Žiarivé výšky</h4><p>Vysoké a ostré tóny. Pri dlhom počúvaní a vyššej hlasitosti môžu unavovať.</p><ul class="fq"><li><b>741 Hz</b> Solfeggio: vyjadrenie a intuícia</li><li><b>852 Hz</b> Solfeggio: intuícia a vnútorný pokoj</li><li><b>963 Hz</b> Solfeggio: tradične nazývaná frekvencia spojenia s vyšším vedomím a vesmírom</li></ul></div>
+    <p>Vyššie tóny ucho vníma citlivejšie, a preto pri rovnakej hlasitosti znejú silnejšie. Začni potichu. Všetky známe frekvencie nájdeš ako rýchle tlačidlá v režime „Jedna frekvencia".</p>
+
+    <h3>Dve frekvencie, jeden tón</h3>
+    <p>Do každého ucha pošli trochu iný tón. Napríklad 200 Hz do ľavého a 210 Hz do pravého. Tvoj mozog ich spojí do jedného jemne vlniaceho sa tónu. Vlní sa 10-krát za sekundu, pretože 210 − 200 = 10. Čím väčší rozdiel, tým rýchlejšie vlnenie.</p>
+    <p>Potrebuješ slúchadlá, aby každé ucho počulo svoj tón. Najlepšie to funguje, keď sú oba tóny pod 1000 Hz a rozdiel medzi nimi nepresiahne približne 30 Hz.</p>
+    <p>Rozdiel si vyberieš podľa toho, čo práve potrebuješ:</p>
+    <table>
+      <tr><th>Rozdiel</th><th>Pásmo</th><th>Tradične sa spája s</th></tr>
+      <tr><td>0,5 – 4 Hz</td><td>Delta</td><td>hlboký odpočinok a spánok</td></tr>
+      <tr><td>4 – 8 Hz</td><td>Théta</td><td>uvoľnenie, meditácia a driemota</td></tr>
+      <tr><td>8 – 13 Hz</td><td>Alfa</td><td>pokojná a bdelá myseľ</td></tr>
+      <tr><td>13 – 30 Hz</td><td>Beta</td><td>sústredenie a bdelosť</td></tr>
+      <tr><td>30+ Hz</td><td>Gama</td><td>vysoká pozornosť</td></tr>
+    </table>
+    <p><b>Frekvencia Zeme:</b> Schumannova rezonancia má približne 7,83 Hz. Je príliš nízka na to, aby si ju počul ako tón, ale ako rozdiel medzi ľavým a pravým uchom ju vieš vytvoriť. Spadá do pásma Théta. Nájdeš ju medzi tlačidlami pod názvom „Zem".</p>
+
+    <h3>Tvoj prvý zvuk</h3>
+    <ul>
+      <li>Nasaď si slúchadlá a nastav si príjemnú hlasitosť.</li>
+      <li>Vyber „Dve frekvencie" a pásmo, napríklad Théta na uvoľnenie alebo Beta na sústredenie.</li>
+      <li>Pridaj zvuky prírody, ak chceš.</li>
+      <li>Nechaj hrať 15 až 30 minút. Časovač zastaví prehrávanie sám.</li>
+    </ul>
+  </section>
+
+
+  <section class="hero" aria-label="Prehrávač">
+    <div class="beat-big"><b id="beatNum">7</b><small>Hz</small></div>
+    <div class="band" id="beatBand">Théta · relax</div>
+    <div class="scale" aria-hidden="true">
+      <div class="segs" id="segs"></div>
+      <div class="marker" id="marker"></div>
+      <div class="seglabels" id="seglabels"></div>
+    </div>
+    <div class="playwrap" id="playwrap" data-on="0">
+      <i class="ring"></i><i class="ring r2"></i>
+      <button id="play" type="button" data-state="off" aria-label="Spustiť">
+        <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>
+        <svg class="i-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>
+        <svg class="i-busy" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10h-2.5A7.5 7.5 0 1 1 12 4.5z"/></svg>
+      </button>
+    </div>
+    <div id="status" role="status" aria-live="polite">Nasaď si slúchadlá. Bez nich sa dva tóny nespoja.</div>
+    <div id="left"></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-freq">
+    <h2 id="h-freq">Frekvencie</h2>
+    <div class="chips" id="modes" role="group" aria-label="Režim"></div>
+    <div class="freqs" id="freqs">
+      <div class="freq">
+        <label for="fl" id="lblL">Ľavé ucho</label>
+        <div class="stepper"><button type="button" data-step="fl:-1" aria-label="Ľavé ucho o 1 Hz nižšie">−</button><input id="fl" type="text" inputmode="decimal" autocomplete="off"><button type="button" data-step="fl:1" aria-label="Ľavé ucho o 1 Hz vyššie">+</button></div>
+        <div class="unit">Hz</div>
+      </div>
+      <div class="freq" id="freqR">
+        <label for="fr">Pravé ucho</label>
+        <div class="stepper"><button type="button" data-step="fr:-1" aria-label="Pravé ucho o 1 Hz nižšie">−</button><input id="fr" type="text" inputmode="decimal" autocomplete="off"><button type="button" data-step="fr:1" aria-label="Pravé ucho o 1 Hz vyššie">+</button></div>
+        <div class="unit">Hz</div>
+      </div>
+    </div>
+    <div class="chips" id="octaves" style="display:none" role="group" aria-label="Oktáva"></div>
+    <div class="chips" id="presets" role="group" aria-label="Predvoľby"></div>
+    <p class="hint" id="warn"></p>
+    <p class="note" id="eqnote"></p>
+    <p class="note" id="measure"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-mix">
+    <h2 id="h-mix">Zvuky</h2>
+    <div id="mix" style="display:flex;flex-direction:column;gap:4px"></div>
+    <p class="note">Zmenu začuješ o chvíľu, zvuk sa musí prepočítať.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-vol">
+    <h2 id="h-vol">Hlasitosť</h2>
+    <div class="row plain" id="rowMaster"></div>
+    <div class="row plain" id="rowBal"></div>
+    <label class="toggle"><span style="margin:0"><b>Vyrovnať hlasitosť uší</b><span>Nízke tóny ucho počuje nerovnako hlasno. Aplikácia ich vyrovná podľa izofónnych kriviek (ISO 226).</span></span><input type="checkbox" id="auto"></label>
+    <p class="note">Tu nastav strop a hlasitosť dolaď tlačidlami na iPhone. Pri vysokej hlasitosti chráň sluch.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-timer">
+    <h2 id="h-timer">Časovač</h2>
+    <div class="chips" id="timers" role="group" aria-label="Časovač vypnutia"></div>
+  </section>
+
+  <details>
+    <summary>Zdroje nahrávok</summary>
+    <ul>
+      <li>Vtáky: „Waidachswald Oberschefflenz Abend“, Wikimedia Commons, CC0</li>
+      <li>Zvonkohra: „Windglockenspiel Koshi“, Wikimedia Commons, CC0</li>
+    </ul>
+    <p>Nahrávky sú upravené (filter, hlasitosť, slučka).</p>
+  </details>
+  <footer class="foot">Lucky Sky LLC</footer>
+</main>
+
+<audio id="audio" playsinline loop></audio>
+
+<script id="dsp">
+// ==DSP-START==
+const SR = 22050;           // vzorkovacia frekvencia výstupu
+const LOOP = 240;           // dĺžka slučky v sekundách (zvuky majú dĺžky, ktoré do 240 s vychádzajú na celý počet opakovaní)
+const N = SR * LOOP, TAU = Math.PI * 2, XFADE = 2 * SR, PAD = 2048;
+
+const LAYERS = [
+  { id: 'birds',  label: 'Vtáky',     file: 'audio/birds.mp3',  L: 120, icon: 'M4 14c3-1 5-4 6-7 1 2 3 3 5 3l4 1-4 2c-1 3-4 5-8 4-1 0-2-1-3-3zM17 11l.01 0' },
+  { id: 'chimes', label: 'Zvonkohra', file: 'audio/chimes.mp3', L: 48,  icon: 'M12 3v3M6 8h12M8 8v8M12 8v11M16 8v6' }
+];
+const cache = {}, failed = {};
+
+function toSR(ch, rate) {
+  if (rate === SR) return ch;
+  const n = Math.floor(ch.length * SR / rate), o = new Float32Array(n), r = rate / SR;
+  for (let i = 0; i < n; i++) {
+    const p = i * r, k = Math.floor(p), f = p - k;
+    o[i] = ch[k] * (1 - f) + (k + 1 < ch.length ? ch[k + 1] : ch[k]) * f;
+  }
+  return o;
+}
+// plynulá slučka: konieckrížovo prelínaný do začiatku (rovnaký výkon)
+function makeLoop(src, len) {
+  len = Math.min(len, src.length);
+  const X = Math.max(0, Math.min(XFADE, src.length - len)), out = new Float32Array(len);
+  for (let i = 0; i < len; i++) out[i] = src[i];
+  for (let i = 0; i < X; i++) {
+    const w = (i / X) * Math.PI / 2;
+    out[i] = src[i] * Math.sin(w) + src[len + i] * Math.cos(w);
+  }
+  return out;
+}
+function setLayerPCM(id, a, b, secs) {
+  const l = LAYERS.find(x => x.id === id);
+  cache[id] = { L: makeLoop(a, (secs || l.L) * SR), R: makeLoop(b, (secs || l.L) * SR) };
+}
+async function loadLayer(l) {
+  const resp = await fetch(l.file);
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  const buf = await resp.arrayBuffer();
+  const Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const ctx = new Ctx(2, SR, SR);
+  const ab = await new Promise((res, rej) => { const p = ctx.decodeAudioData(buf, res, rej); if (p && p.then) p.then(res, rej); });
+  const c0 = ab.getChannelData(0), c1 = ab.numberOfChannels > 1 ? ab.getChannelData(1) : c0;
+  setLayerPCM(l.id, toSR(c0.subarray(PAD), ab.sampleRate), toSR(c1.subarray(PAD), ab.sampleRate));
+}
+
+// --- vyrovnanie hlasitosti uší podľa ISO 226:2003 (kontúra 40 fónov)
+const ISO = {
+  f:  [20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500],
+  af: [0.532, 0.506, 0.480, 0.455, 0.432, 0.409, 0.387, 0.367, 0.349, 0.330, 0.315, 0.301, 0.288, 0.276, 0.267, 0.259, 0.253, 0.250, 0.246, 0.244, 0.243, 0.243, 0.243, 0.242, 0.242, 0.245, 0.254, 0.271, 0.301],
+  Lu: [-31.6, -27.2, -23.0, -19.1, -15.9, -13.0, -10.3, -8.1, -6.2, -4.5, -3.1, -2.0, -1.1, -0.4, 0.0, 0.3, 0.5, 0.0, -2.7, -4.1, -1.0, 1.7, 2.5, 1.2, -2.1, -7.1, -11.2, -10.7, -3.1],
+  Tf: [78.5, 68.7, 59.5, 51.1, 44.0, 37.5, 31.5, 26.5, 22.1, 17.9, 14.4, 11.4, 8.6, 6.2, 4.4, 3.0, 2.2, 2.4, 3.5, 1.7, -1.3, -4.2, -6.0, -5.4, -1.5, 6.0, 12.6, 13.9, 12.3]
+};
+function isoLp(f) {
+  const F = ISO.f; let i = 0;
+  if (f <= F[0]) i = 0; else if (f >= F[F.length - 1]) i = F.length - 2; else while (F[i + 1] < f) i++;
+  const t = Math.min(1, Math.max(0, (Math.log(f) - Math.log(F[i])) / (Math.log(F[i + 1]) - Math.log(F[i]))));
+  const m = a => a[i] + (a[i + 1] - a[i]) * t, af = m(ISO.af), Lu = m(ISO.Lu), Tf = m(ISO.Tf);
+  const Af = 4.47e-3 * (Math.pow(10, 0.025 * 40) - 1.15) + Math.pow(0.4 * Math.pow(10, (Tf + Lu) / 10 - 9), af);
+  return (10 / af) * Math.log10(Af) - Lu + 94;
+}
+// vráti zosilnenia [ľavé, pravé] s maximom 1; bal v dB (kladné = viac napravo)
+function earGains(fl, fr, auto, bal) {
+  let gl = 1, gr = 1;
+  if (auto) {
+    const d = Math.max(-20, Math.min(20, isoLp(fl) - isoLp(fr)));   // kladné: ľavý tón je pre ucho slabší, potrebuje viac
+    if (d >= 0) gr = Math.pow(10, -d / 20); else gl = Math.pow(10, d / 20);
+  }
+  const h = Math.pow(10, bal / 40); gl /= h; gr *= h;
+  const m = Math.max(gl, gr); return [gl / m, gr / m];
+}
+
+// p = { fl, fr, tone 0-100, master 0-100, bal dB, auto, lv:{id:0-100} }; vráti prekladaný Int16 (L,R,L,R...)
+function buildPcm(p) {
+  const act = [];
+  for (const l of LAYERS) {
+    const g = (p.lv[l.id] || 0) / 100, c = cache[l.id];
+    if (g > 0 && c) act.push({ g, L: c.L, R: c.R, n: c.L.length });
+  }
+  const NN = p.len || N;
+  const [eL, eR] = earGains(p.fl, p.fr, p.auto, p.bal);
+  const gT = p.tone / 100, aL = gT * eL, aR = gT * eR;
+  const wl = TAU * p.fl / SR, wr = TAU * p.fr / SR;
+  // 1. prechod: odhad úrovne (99,99. percentil)
+  const BINS = 4096, RANGE = 4, hist = new Uint32Array(BINS); let cnt = 0;
+  for (let i = 0; i < NN; i += 7) {
+    let l = aL * Math.sin(wl * i), r = aR * Math.sin(wr * i);
+    for (let k = 0; k < act.length; k++) { const a = act[k], j = i % a.n; l += a.g * a.L[j]; r += a.g * a.R[j]; }
+    hist[Math.min(BINS - 1, (Math.abs(l) / RANGE * BINS) | 0)]++;
+    hist[Math.min(BINS - 1, (Math.abs(r) / RANGE * BINS) | 0)]++;
+    cnt += 2;
+  }
+  let acc = 0, pk = RANGE / BINS; const top = Math.max(1, Math.floor(cnt * 0.0001));
+  for (let b = BINS - 1; b >= 0; b--) { acc += hist[b]; if (acc >= top) { pk = (b + 1) / BINS * RANGE; break; } }
+  const sc = 0.9 * (p.master / 100) / pk;
+  // 2. prechod: zápis
+  const out = new Int16Array(NN * 2), na = act.length, ix = new Int32Array(na);
+  const cl = Math.cos(wl), sl = Math.sin(wl), cr = Math.cos(wr), sr = Math.sin(wr);
+  let ccl = 1, ssl = 0, ccr = 1, ssr = 0;
+  for (let i = 0; i < NN; i++) {
+    let l = aL * ssl, r = aR * ssr;
+    for (let k = 0; k < na; k++) {
+      const a = act[k], j = ix[k];
+      l += a.g * a.L[j]; r += a.g * a.R[j];
+      ix[k] = j + 1 === a.n ? 0 : j + 1;
+    }
+    let t = ccl * cl - ssl * sl; ssl = ssl * cl + ccl * sl; ccl = t;
+    t = ccr * cr - ssr * sr; ssr = ssr * cr + ccr * sr; ccr = t;
+    l *= sc; r *= sc;
+    let a = l < 0 ? -l : l; if (a > 0.9) { a = 0.9 + 0.09 * Math.tanh((a - 0.9) / 0.09); l = l < 0 ? -a : a; }
+    a = r < 0 ? -r : r; if (a > 0.9) { a = 0.9 + 0.09 * Math.tanh((a - 0.9) / 0.09); r = r < 0 ? -a : a; }
+    out[2 * i] = Math.round(l * 32767); out[2 * i + 1] = Math.round(r * 32767);
+  }
+  return out;
+}
+function wavBlob(pcm) {
+  const buf = new ArrayBuffer(44 + pcm.length * 2), dv = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); dv.setUint32(4, 36 + pcm.length * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 2, true);
+  dv.setUint32(24, SR, true); dv.setUint32(28, SR * 4, true); dv.setUint16(32, 4, true); dv.setUint16(34, 16, true);
+  w(36, 'data'); dv.setUint32(40, pcm.length * 2, true);
+  new Int16Array(buf, 44).set(pcm);
+  return new Blob([buf], { type: 'audio/wav' });
+}
+// meranie frekvencie vygenerovaného tónu (Goertzel + parabolická interpolácia), samotný tón bez zvukov
+function goertzel(x, f) {
+  const c = 2 * Math.cos(TAU * f / SR); let s1 = 0, s2 = 0;
+  for (let i = 0; i < x.length; i++) { const s0 = x[i] + c * s1 - s2; s2 = s1; s1 = s0; }
+  return s1 * s1 + s2 * s2 - c * s1 * s2;
+}
+function measureTone(p) {
+  const len = 4 * SR, pcm = buildPcm(Object.assign({}, p, { lv: {}, len: len, master: 100, tone: 100 })), res = [];
+  for (let ch = 0; ch < 2; ch++) {
+    const x = new Float32Array(len), f0 = ch === 0 ? p.fl : p.fr;
+    for (let i = 0; i < len; i++) x[i] = pcm[2 * i + ch] / 32768 * (0.5 - 0.5 * Math.cos(TAU * i / len));
+    let best = f0, bp = -1;
+    for (let d = -2; d <= 2.0001; d += 0.25) { const f = f0 + d; if (f <= 1) continue; const pw = goertzel(x, f); if (pw > bp) { bp = pw; best = f; } }
+    let b2 = best, bp2 = -1;
+    for (let d = -0.3; d <= 0.3001; d += 0.01) { const f = best + d; const pw = goertzel(x, f); if (pw > bp2) { bp2 = pw; b2 = f; } }
+    const a = Math.sqrt(goertzel(x, b2 - 0.01)), b = Math.sqrt(goertzel(x, b2)), c = Math.sqrt(goertzel(x, b2 + 0.01));
+    const den = a - 2 * b + c; res.push(b2 + (Math.abs(den) > 1e-12 ? 0.01 * 0.5 * (a - c) / den : 0));
+  }
+  return res;
+}
+// ==DSP-END==
+</script>
+
+<script id="ui">
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const audio = $('audio');
+  const KEY = 'beaty-v4';
+  const defaults = { mode: 'bin', fl: 200, fr: 210, tone: 60, master: 80, bal: 0, auto: true, gapless: true, timer: 0, lv: { birds: 0, chimes: 0 } };
+  let st = JSON.parse(JSON.stringify(defaults));
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved && typeof saved === 'object') st = Object.assign(st, saved, { lv: Object.assign({}, defaults.lv, saved.lv || {}) });
+  } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+
+  const r1 = v => Math.round(v * 10) / 10;
+  const clampF = v => Math.min(st.mode === 'mono' ? 10000 : 1500, Math.max(20, r1(v)));
+  const fmt = v => String(r1(v)).replace('.', ',');
+  const parseF = s => { const v = parseFloat(String(s).replace(',', '.')); return isFinite(v) ? v : NaN; };
+
+  // --- pásma a stupnica beatu
+  const BANDS = [['Delta', 0.5, 4], ['Théta', 4, 8], ['Alfa', 8, 13], ['Beta', 13, 30], ['Gama', 30, 40]];
+  const LO = 0.5, HI = 40, SPAN = Math.log(HI / LO);
+  const segs = $('segs'), labs = $('seglabels');
+  BANDS.forEach(b => {
+    const w = Math.log(b[2] / b[1]) / SPAN * 100;
+    const s = document.createElement('div'); s.className = 'seg'; s.style.flex = w + ' 1 0'; s.dataset.name = b[0]; segs.appendChild(s);
+    const l = document.createElement('span'); l.style.flex = w + ' 1 0'; l.textContent = b[0]; labs.appendChild(l);
+  });
+  const PURPOSE = { Delta: 'spánok', 'Théta': 'relax, meditácia', Alfa: 'pokoj', Beta: 'sústredenie', Gama: 'bdelosť' };
+  function bandOf(b) { for (const x of BANDS) if (b < x[2]) return x[0]; return 'Gama'; }
+  const PRESETS = [['Delta', 2], ['Théta', 6], ['Zem', 7.8], ['Alfa', 10], ['Beta', 18], ['Gama', 35]];
+
+  // --- frekvencie
+  const fl = $('fl'), fr = $('fr');
+  const effR = () => st.mode === 'mono' ? st.fl : st.fr;
+  const pcmParams = () => Object.assign({}, st, { fr: effR() });
+  const fmt2 = v => v.toFixed(2).replace('.', ',');
+  let measT = 0;
+  function scheduleMeasure() {
+    clearTimeout(measT);
+    measT = setTimeout(() => {
+      try {
+        const m = measureTone(pcmParams());
+        $('measure').textContent = 'Zmerané v generovanom signáli: ľavé ' + fmt2(m[0]) + ' Hz, pravé ' + fmt2(m[1]) + ' Hz (meranie samotného tónu, bez zvukov prírody).';
+      } catch (e) { $('measure').textContent = ''; }
+    }, 350);
+  }
+  function renderFreq() {
+    const mono = st.mode === 'mono', R = effR();
+    fl.value = fmt(st.fl); fr.value = fmt(st.fr);
+    $('freqR').style.display = mono ? 'none' : '';
+    $('freqs').style.gridTemplateColumns = mono ? '1fr' : '1fr 1fr';
+    $('lblL').textContent = mono ? 'Frekvencia' : 'Ľavé ucho';
+    $('octaves').style.display = mono ? '' : 'none';
+    document.querySelector('.scale').style.display = mono ? 'none' : '';
+    document.querySelectorAll('#modes .chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.mode === st.mode)));
+    const b = Math.abs(R - st.fl);
+    if (mono) {
+      $('beatNum').textContent = fmt(st.fl);
+      $('beatBand').textContent = 'čistý tón · rovnaký v oboch ušiach';
+    } else {
+      $('beatNum').textContent = fmt(b);
+      const nm = b < 0.05 ? null : bandOf(b);
+      $('beatBand').textContent = nm ? nm + ' · ' + PURPOSE[nm] : 'rovnaké tóny, beat nevznikne';
+      segs.childNodes.forEach(s => s.dataset.on = nm && s.dataset.name === nm ? '1' : '0');
+      const pos = Math.min(1, Math.max(0, Math.log(Math.max(b, LO) / LO) / SPAN));
+      $('marker').style.left = (pos * 100) + '%';
+    }
+    document.querySelectorAll('#presets .chip').forEach(c => {
+      const on = mono ? Math.abs(parseFloat(c.dataset.f) - st.fl) < 0.05 : Math.abs(parseFloat(c.dataset.b) - b) < 0.05;
+      c.setAttribute('aria-pressed', String(on));
+    });
+    const w = [];
+    if (!mono) {
+    }
+    $('warn').textContent = w.join(' ');
+    const g = earGains(st.fl, R, st.auto, st.bal), d = 20 * Math.log10(g[0] / g[1]);
+    $('eqnote').textContent = !mono && Math.abs(d) >= 1 ? 'Vyrovnanie uší: ' + (d < 0 ? 'ľavé' : 'pravé') + ' ucho je ' + fmt(Math.abs(d)) + ' dB tichšie ako druhé.' : '';
+    scheduleMeasure();
+  }
+  function setFreq(key, v) {
+    if (!isFinite(v)) { renderFreq(); return; }
+    st[key] = clampF(v); renderFreq(); save(); scheduleRebuild();
+  }
+  [['fl', fl], ['fr', fr]].forEach(([k, el]) => {
+    el.addEventListener('change', () => setFreq(k, parseF(el.value)));
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') el.blur(); });
+    el.addEventListener('focus', () => el.select());
+  });
+  document.querySelectorAll('[data-step]').forEach(btn => btn.addEventListener('click', () => {
+    const [k, d] = btn.dataset.step.split(':'); setFreq(k, st[k] + parseFloat(d));
+  }));
+  const presets = $('presets');
+  const MONO = [136.1, 285, 396, 417, 432, 440, 528, 639, 741, 852, 963];
+  function buildPresets() {
+    presets.innerHTML = '';
+    const mk = (text, attr, val, fn) => {
+      const el = document.createElement('button'); el.type = 'button'; el.className = 'chip'; el.dataset[attr] = val; el.textContent = text;
+      el.addEventListener('click', fn); presets.appendChild(el);
+    };
+    if (st.mode === 'mono') MONO.forEach(f => mk(String(f).replace('.', ',') + ' Hz', 'f', f, () => { st.fl = f; renderFreq(); save(); scheduleRebuild(); }));
+    else PRESETS.forEach(([n, b]) => mk(n + ' ' + String(b).replace('.', ',') + ' Hz', 'b', b, () => { st.fr = clampF(st.fl + b); renderFreq(); save(); scheduleRebuild(); }));
+  }
+  const modes = $('modes');
+  [['bin', 'Dve frekvencie'], ['mono', 'Jedna frekvencia']].forEach(([m, t]) => {
+    const el = document.createElement('button'); el.type = 'button'; el.className = 'chip'; el.dataset.mode = m; el.textContent = t;
+    el.addEventListener('click', () => {
+      st.mode = m; st.fl = clampF(st.fl); st.fr = clampF(st.fr);
+      buildPresets(); renderFreq(); save(); scheduleRebuild();
+    });
+    modes.appendChild(el);
+  });
+  const oct = $('octaves');
+  [['× ½', 0.5], ['× 2', 2]].forEach(([t, k]) => {
+    const el = document.createElement('button'); el.type = 'button'; el.className = 'chip'; el.textContent = t;
+    el.addEventListener('click', () => setFreq('fl', st.fl * k)); oct.appendChild(el);
+  });
+
+  // --- posuvníky
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  function sliderRow(parent, id, label, icon, min, max, get, set, unit) {
+    const row = parent;
+    const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = 1; inp.id = 'sl-' + id; inp.value = get();
+    const out = document.createElement('output'); out.htmlFor = inp.id;
+    const show = () => { out.textContent = (get() > 0 && unit === 'dB' ? '+' : '') + get() + (unit === 'dB' ? ' dB' : unit); };
+    show();
+    inp.addEventListener('input', () => { set(+inp.value); show(); save(); renderFreq(); scheduleRebuild(); });
+    if (icon) {
+      const svg = document.createElementNS(SVGNS, 'svg'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
+      const p = document.createElementNS(SVGNS, 'path'); p.setAttribute('d', icon); svg.appendChild(p); row.appendChild(svg);
+      const lab = document.createElement('label'); lab.htmlFor = inp.id; lab.textContent = label; row.appendChild(lab);
+    }
+    row.appendChild(inp); row.appendChild(out);
+    return inp;
+  }
+  const mix = $('mix');
+  const TONE_ICON = 'M3 12h3l2-6 3 12 3-9 2 3h5';
+  [['tone', 'Frekvencia', TONE_ICON, () => st.tone, v => { st.tone = v; }]].concat(
+    LAYERS.map(l => [l.id, l.label, l.icon, () => st.lv[l.id], v => { st.lv[l.id] = v; }])
+  ).forEach(([id, label, icon, get, set]) => {
+    const row = document.createElement('div'); row.className = 'row'; mix.appendChild(row);
+    sliderRow(row, id, label, icon, 0, 100, get, set, '%');
+  });
+  function plainRow(el, id, label, hint, min, max, get, set, unit) {
+    const l = document.createElement('div'); l.className = 'l'; l.innerHTML = '<label for="sl-' + id + '">' + label + '</label><span>' + hint + '</span>';
+    el.appendChild(l); sliderRow(el, id, null, null, min, max, get, set, unit);
+  }
+  plainRow($('rowMaster'), 'master', 'Celková hlasitosť', 'strop hlasitosti celého zvuku', 0, 100, () => st.master, v => { st.master = v; }, '%');
+  plainRow($('rowBal'), 'bal', 'Vyváženie uší', 'ľavé ← → pravé', -12, 12, () => st.bal, v => { st.bal = v; }, 'dB');
+  const auto = $('auto'); auto.checked = !!st.auto;
+  auto.addEventListener('change', () => { st.auto = auto.checked; save(); renderFreq(); scheduleRebuild(); });
+  st.gapless = true;
+
+  // --- časovač
+  const TIMERS = [[0, '∞'], [15, '15 min'], [30, '30 min'], [45, '45 min'], [60, '60 min'], [90, '90 min']];
+  const tbox = $('timers'); let endAt = 0;
+  function renderTimers() {
+    tbox.innerHTML = '';
+    TIMERS.forEach(([m, t]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = t;
+      b.setAttribute('aria-pressed', String(st.timer === m));
+      b.addEventListener('click', () => { st.timer = m; save(); if (playing) armTimer(); renderTimers(); tick(); });
+      tbox.appendChild(b);
+    });
+  }
+  function armTimer() { endAt = st.timer > 0 ? Date.now() + st.timer * 60000 : 0; }
+  function tick() {
+    const el = $('left');
+    if (!playing || !endAt) { el.textContent = ''; return; }
+    const ms = endAt - Date.now();
+    if (ms <= 0) { endAt = 0; audio.pause(); setStatus('Časovač skončil, zvuk je zastavený.'); el.textContent = ''; return; }
+    const s = Math.ceil(ms / 1000);
+    el.textContent = 'Zostáva ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+  setInterval(tick, 1000);
+  document.addEventListener('visibilitychange', tick);
+  audio.addEventListener('timeupdate', () => { if (endAt && Date.now() >= endAt) tick(); });
+
+  // --- prehrávanie
+  const playBtn = $('play'), wrap = $('playwrap');
+  let playing = false, swapping = false, busy = false, curUrl = null, session = 0, rebuildT = 0, actx = null, dest = null, gsrc = null;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function setStatus(t) { $('status').textContent = t; }
+  function setBtn(state) {
+    playBtn.dataset.state = state;
+    playBtn.setAttribute('aria-label', state === 'on' ? 'Zastaviť' : state === 'busy' ? 'Pripravujem zvuk' : 'Spustiť');
+    wrap.dataset.on = state === 'on' ? '1' : '0';
+  }
+  function meta() {
+    if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: 'Generátor Šťastia', artist: 'L ' + fmt(st.fl) + ' Hz · P ' + fmt(effR()) + ' Hz' });
+      navigator.mediaSession.setActionHandler('play', () => audio.play().catch(() => {}));
+      navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+      navigator.mediaSession.setActionHandler('stop', () => audio.pause());
+    } catch (e) {}
+  }
+  const silentUrl = URL.createObjectURL(wavBlob(new Int16Array(SR)));
+
+  function prepCtx() {
+    if (actx) { if (actx.state === 'suspended') actx.resume(); return; }
+    const C = window.AudioContext || window.webkitAudioContext;
+    try { actx = new C({ sampleRate: SR }); } catch (e) { actx = new C(); }
+    actx.resume(); dest = actx.createMediaStreamDestination();
+  }
+  function stopGapless() { if (gsrc) { try { gsrc.stop(); gsrc.disconnect(); } catch (e) {} gsrc = null; } }
+
+  async function prepare(token) {
+    const need = LAYERS.filter(l => st.lv[l.id] > 0 && !cache[l.id] && !failed[l.id]);
+    for (let i = 0; i < need.length; i++) {
+      setStatus('Načítavam zvuky ' + (i + 1) + ' z ' + need.length + '…');
+      try { await loadLayer(need[i]); } catch (e) { failed[need[i].id] = 1; setStatus('Zvuk „' + need[i].label + '“ sa nepodarilo načítať.'); await wait(900); }
+      if (token !== session) return null;
+    }
+    setStatus('Generujem zvuk, chvíľu to trvá…'); await wait(40);
+    if (token !== session) return null;
+    return buildPcm(pcmParams());
+  }
+  async function render(startAt, token) {
+    const pcm = await prepare(token);
+    if (!pcm || token !== session) return;
+    meta();
+    if (st.gapless) {
+      swapping = true; prepCtx();
+      const buf = actx.createBuffer(2, N, SR), a = buf.getChannelData(0), b = buf.getChannelData(1);
+      for (let i = 0; i < N; i++) { a[i] = pcm[2 * i] / 32768; b[i] = pcm[2 * i + 1] / 32768; }
+      stopGapless();
+      gsrc = actx.createBufferSource(); gsrc.buffer = buf; gsrc.loop = true; gsrc.connect(dest); gsrc.start();
+      if (audio.srcObject !== dest.stream) { audio.pause(); audio.removeAttribute('src'); audio.srcObject = dest.stream; audio.loop = false; }
+      swapping = false; busy = false;
+      const p = audio.play(); if (p && p.catch) p.catch(fail);
+      if (curUrl) { URL.revokeObjectURL(curUrl); curUrl = null; }
+      return;
+    }
+    stopGapless();
+    if (audio.srcObject) audio.srcObject = null;
+    const url = URL.createObjectURL(wavBlob(pcm)), old = curUrl; curUrl = url; swapping = true;
+    audio.addEventListener('loadedmetadata', function h() {
+      try { if (startAt) audio.currentTime = startAt % LOOP; } catch (e) {}
+      const done = () => { swapping = false; busy = false; if (old) URL.revokeObjectURL(old); };
+      const p = audio.play(); if (p && p.then) p.then(done, e => { done(); fail(e); }); else done();
+    }, { once: true });
+    audio.src = url; audio.loop = true; audio.load();
+  }
+  function fail() {
+    playing = false; busy = false; swapping = false; setBtn('off'); endAt = 0; tick();
+    setStatus('Prehrávanie sa nespustilo. Klepni na Spustiť ešte raz.');
+  }
+  function start() {
+    session++; const token = session; busy = true; playing = true;
+    setBtn('busy'); setStatus('Pripravujem zvuk…');
+    if (st.gapless) prepCtx();
+    swapping = true; stopGapless(); if (audio.srcObject) audio.srcObject = null;
+    audio.src = silentUrl; audio.loop = true; audio.play().catch(() => {});   // odomknutie prehrávača priamo v kliku (iOS)
+    armTimer();
+    render(0, token).catch(e => { fail(); setStatus('Chyba pri príprave zvuku: ' + (e && e.message)); });
+  }
+  function stop() {
+    session++; playing = false; busy = false; swapping = false; clearTimeout(rebuildT); endAt = 0;
+    stopGapless(); audio.pause(); setBtn('off'); setStatus('Zastavené.'); tick();
+  }
+  function scheduleRebuild(now) {
+    clearTimeout(rebuildT);
+    if (!playing) return;
+    rebuildT = setTimeout(function go() {
+      if (!playing) return;
+      if (busy) { rebuildT = setTimeout(go, 600); return; }
+      busy = true; setStatus('Aplikujem zmenu…');
+      const token = ++session, at = st.gapless ? 0 : (audio.currentTime || 0);
+      render(at, token).catch(e => { fail(); setStatus('Chyba: ' + (e && e.message)); });
+    }, now ? 50 : 600);
+  }
+  function showOn() { if (playing && !busy && !swapping) { setBtn('on'); setStatus('Hrá. Môžeš zamknúť obrazovku.'); } }
+  audio.addEventListener('playing', showOn);
+  audio.addEventListener('timeupdate', () => { if (playBtn.dataset.state !== 'on') showOn(); });
+  audio.addEventListener('play', () => { if (!playing) { playing = true; if (!endAt) armTimer(); } });
+  audio.addEventListener('pause', () => {
+    if (swapping) return;
+    if (playing) { playing = false; setBtn('off'); if (!endAt) setStatus('Pozastavené.'); tick(); }
+  });
+  playBtn.addEventListener('click', () => { if (playing) stop(); else start(); });
+
+  buildPresets(); renderFreq(); renderTimers(); setBtn('off');
+})();
+</script>
+</body>
+</html>
