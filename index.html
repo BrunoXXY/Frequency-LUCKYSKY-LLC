@@ -449,7 +449,7 @@ class Engine {
     // signály zmeny fázy: stúpajúci tón = nádych, klesajúci = výdych, rovný tón = zadržanie alebo pauza
     const mo = this.mosc = c.createOscillator(); mo.frequency.value = 440;
     const mEnv = this.mEnv = c.createGain(); mEnv.gain.value = 0;
-    const ml = this.markLvl = c.createGain(); ml.gain.value = (o.markLv == null ? 60 : o.markLv) / 100;
+    const ml = this.markLvl = c.createGain(); ml.gain.value = (o.markLv == null ? 6 : o.markLv) / 100;
     mo.connect(mEnv); mEnv.connect(ml); ml.connect(master); mo.start(tS); this.srcs.push(mo);
     this.scheduleMarks(0);
     this.setGuide(o.guide, true);
@@ -564,8 +564,8 @@ function makeLoopBuf(ctx, ab, secs) {   // plynulá slučka prelínaná do zači
   const $ = id => document.getElementById(id);
   const audio = $('audio');
   const KEY = 'stastie2';
-  let st = { toneLv: 70, breathLv: 70, markLv: 60, guide: 'wave', min: {}, lv: {} };
-  try { const sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && typeof sv === 'object') st = Object.assign(st, sv, { min: Object.assign({}, sv.min || {}), lv: Object.assign({}, sv.lv || {}) }); } catch (e) {}
+  let st = { lvv: 2, toneLv: 70, breathLv: 7, markLv: 6, guide: 'wave', min: {}, lv: {} };
+  try { const sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && typeof sv === 'object') st = Object.assign(st, sv, { min: Object.assign({}, sv.min || {}), lv: Object.assign({}, sv.lv || {}) }); if (st.lvv !== 2) { st.lvv = 2; st.breathLv = 7; st.markLv = 6; } } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
   const fmt = v => String(Math.round(v * 10) / 10).replace('.', ',');
   const bandOf = b => b < 4 ? 'Delta' : b < 8 ? 'Théta' : b < 13 ? 'Alfa' : b < 30 ? 'Beta' : 'Gama';
