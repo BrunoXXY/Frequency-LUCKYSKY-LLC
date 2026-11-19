@@ -565,7 +565,7 @@ function makeLoopBuf(ctx, ab, secs) {   // plynulá slučka prelínaná do zači
   const audio = $('audio');
   const KEY = 'stastie2';
   let st = { lvv: 2, toneLv: 70, breathLv: 7, markLv: 6, guide: 'wave', min: {}, lv: {} };
-  try { const sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && typeof sv === 'object') st = Object.assign(st, sv, { min: Object.assign({}, sv.min || {}), lv: Object.assign({}, sv.lv || {}) }); if (st.lvv !== 2) { st.lvv = 2; st.breathLv = 7; st.markLv = 6; } } catch (e) {}
+  try { const sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && typeof sv === 'object') st = Object.assign(st, sv, { min: Object.assign({}, sv.min || {}), lv: Object.assign({}, sv.lv || {}) }); if (sv.lvv !== 2) { st.lvv = 2; st.breathLv = 7; st.markLv = 6; } } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
   const fmt = v => String(Math.round(v * 10) / 10).replace('.', ',');
   const bandOf = b => b < 4 ? 'Delta' : b < 8 ? 'Théta' : b < 13 ? 'Alfa' : b < 30 ? 'Beta' : 'Gama';
