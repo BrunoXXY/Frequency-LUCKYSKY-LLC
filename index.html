@@ -9,7 +9,6 @@
 <title>Generátor Šťastia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
 <style>
 /* Layout idea: one calm night column. A hero with the beat number, its brainwave band and the play button, then cards for frequencies, sounds, volume and timer. */
 :root {
@@ -22,7 +21,7 @@
   --accent: #7fd6c2;
   --accent-ink: #062019;
   --amber: #f0b96b;
-  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --display: "Sora", -apple-system, "Segoe UI", system-ui, sans-serif;
   --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
   color-scheme: dark;
 }
@@ -101,12 +100,15 @@ h1 { font-family: var(--display); font-weight: 600; font-size: 22px; margin: 6px
 .info td, .info th { text-align: left; padding: 7px 6px; border-bottom: 1px solid rgba(255,255,255,.08); vertical-align: top; color: var(--muted); }
 .info th { color: inherit; font-weight: 600; }
 
+@font-face{font-family:"Sora";font-style:normal;font-weight:100 800;font-display:swap;src:url(fonts/sora-latin-ext-wght-normal.woff2) format("woff2-variations");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Sora";font-style:normal;font-weight:100 800;font-display:swap;src:url(fonts/sora-latin-wght-normal.woff2) format("woff2-variations");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 .bwrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0 2px}
-.bstage{position:relative;width:176px;height:176px;display:grid;place-items:center}
-.bcircle{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 38%,#33569f 0%,#17285a 72%);box-shadow:inset 0 0 0 2px var(--accent),0 0 42px rgba(127,214,194,.22);transform:scale(.55);will-change:transform}
-.btxt{position:relative;text-align:center;font-family:var(--display);pointer-events:none}
-.btxt b{display:block;font-size:21px;font-weight:600;line-height:1.15}
-.btxt span{display:block;min-height:34px;font-size:30px;font-variant-numeric:tabular-nums;color:var(--accent)}
+.bstage{position:relative;width:200px;height:200px;display:grid;place-items:center}
+.bcircle{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 38%,#33569f 0%,#17285a 72%);box-shadow:inset 0 0 0 4px var(--ring,#7fd6c2),0 0 42px var(--glow,rgba(127,214,194,.22));transform:scale(.55);will-change:transform}
+.btxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:var(--display);pointer-events:none}
+.btxt b{display:block;font-size:19px;font-weight:700;line-height:1.15;letter-spacing:.01em}
+.btxt span{display:block;min-height:56px;font-size:52px;font-weight:800;line-height:56px;text-align:center;font-variant-numeric:tabular-nums;color:#fff}
+.blegend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;font-size:12px;color:var(--muted)}.blegend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 .note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
 
 .row { display: grid; grid-template-columns: 24px 96px 1fr 44px; align-items: center; gap: 8px; }
@@ -206,6 +208,7 @@ details ul { margin: 6px 0 0; padding-left: 18px; }
     <div class="chips" id="bchips" role="group" aria-label="Účel dýchania"></div>
     <div class="bwrap" id="bwrap" style="display:none">
       <div class="bstage"><i class="bcircle" id="bcircle"></i><div class="btxt"><b id="blabel">Pripravené</b><span id="bcount"></span></div></div>
+      <div class="blegend" aria-hidden="true"><span><i style="background:#7fd6c2"></i>nádych</span><span><i style="background:#f0b96b"></i>výdych</span><span><i style="background:#e9edf9"></i>zadržanie</span><span><i style="background:#5b6fa8"></i>pauza</span></div>
       <p class="note" id="bname" style="text-align:center"></p>
     </div>
     <p class="tip" id="bdesc" style="margin:0"></p>
@@ -387,6 +390,29 @@ function breathLayer(id, NN) {
   return out;
 }
 
+const mcache = { k: '', a: null };
+// signály zmeny fázy: stúpajúci tón = nádych, klesajúci = výdych, rovný vysoký = zadržanie, rovný nízky = pauza
+function markLayer(id, NN) {
+  const k = id + ':' + NN;
+  if (mcache.k === k && mcache.a) return mcache.a;
+  const P = BREATH[id], U = Math.round(P.total * SR), out = new Float32Array(NN);
+  for (let u0 = 0; u0 < NN; u0 += U) {
+    for (const sg of P.segs) {
+      if (sg.free) continue;
+      const s0 = u0 + Math.round(sg.start * SR), d = Math.min(0.5, sg.dur * 0.5), n = Math.round(d * SR);
+      let f0, f1;
+      if (sg.e1 > sg.e0 + 1e-6) { f0 = 392; f1 = 523; } else if (sg.e1 < sg.e0 - 1e-6) { f0 = 523; f1 = 392; } else if (sg.e0 > 0.5) { f0 = f1 = 523; } else { f0 = f1 = 330; }
+      let ph = 0;
+      for (let j = 0; j < n && s0 + j < NN; j++) {
+        const x = j / n, f = f0 + (f1 - f0) * x, env = Math.min(1, j / (0.03 * SR)) * (1 - x);
+        ph += TAU * f / SR; out[s0 + j] += 0.32 * env * Math.sin(ph);
+      }
+    }
+  }
+  mcache.k = k; mcache.a = out;
+  return out;
+}
+
 // p = { fl, fr, tone 0-100, master 0-100, bal dB, auto, lv:{id:0-100} }; vráti prekladaný Int16 (L,R,L,R...)
 function buildPcm(p) {
   const act = [];
@@ -398,6 +424,10 @@ function buildPcm(p) {
     const b = breathLayer(p.breath, p.len || N);
     act.push({ g: p.breathLv / 100, L: b, R: b, n: b.length });
   } else { bcache.k = ''; bcache.a = null; }
+  if (p.breath && BREATH[p.breath] && (p.markLv || 0) > 0) {
+    const m = markLayer(p.breath, p.len || N);
+    act.push({ g: p.markLv / 100, L: m, R: m, n: m.length });
+  } else { mcache.k = ''; mcache.a = null; }
   const NN = p.len || N;
   const [eL, eR] = earGains(p.fl, p.fr, p.auto, p.bal);
   const gT = p.tone / 100, aL = gT * eL, aR = gT * eR;
@@ -473,7 +503,7 @@ function measureTone(p) {
   const $ = id => document.getElementById(id);
   const audio = $('audio');
   const KEY = 'beaty-v4';
-  const defaults = { mode: 'bin', fl: 200, fr: 210, tone: 60, master: 80, bal: 0, auto: true, gapless: true, timer: 0, lv: { birds: 0, chimes: 0 }, breath: '', breathLv: 70 };
+  const defaults = { mode: 'bin', fl: 200, fr: 210, tone: 60, master: 80, bal: 0, auto: true, gapless: true, timer: 0, lv: { birds: 0, chimes: 0 }, breath: '', breathLv: 70, markLv: 60 };
   let st = JSON.parse(JSON.stringify(defaults));
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -610,7 +640,8 @@ function measureTone(p) {
   const WAVE_ICON = 'M3 12c2-6 4-6 6 0s4 6 6 0 4-6 6 0';
   [['tone', 'Frekvencia', TONE_ICON, () => st.tone, v => { st.tone = v; }]].concat(
     LAYERS.map(l => [l.id, l.label, l.icon, () => st.lv[l.id], v => { st.lv[l.id] = v; }]),
-    [['breath', 'Dych', WAVE_ICON, () => st.breathLv, v => { st.breathLv = v; }]]
+    [['breath', 'Dych', WAVE_ICON, () => st.breathLv, v => { st.breathLv = v; }],
+     ['mark', 'Signály', 'M4 12h3l3-7 4 14 3-7h3', () => st.markLv, v => { st.markLv = v; }]]
   ).forEach(([id, label, icon, get, set]) => {
     const row = document.createElement('div'); row.className = 'row'; mix.appendChild(row);
     sliderRow(row, id, label, icon, 0, 100, get, set, '%');
@@ -768,7 +799,10 @@ function measureTone(p) {
   const BBORDER = ['zostup', 'prazdnota', 'hojdacka', 'uder', 'pokles', 'horizont', 'zaostrenie'];
   const HORIZONT = ['Pozornosť na tele: cíť, ako sa dvíha a klesá.', 'Pozornosť v miestnosti: počuj priestor okolo seba.', 'Pozornosť v otvorenom priestore nad tebou: obloha a ticho.'];
   const bcircle = $('bcircle'), blabel = $('blabel'), bcount = $('bcount'), bhint = $('bhint');
+  const RING = { in: ['#7fd6c2', 'rgba(127,214,194,.38)'], out: ['#f0b96b', 'rgba(240,185,107,.32)'], hold: ['#e9edf9', 'rgba(233,237,249,.28)'], rest: ['#5b6fa8', 'rgba(91,111,168,.25)'], free: ['#93a0c6', 'rgba(147,160,198,.18)'] };
+  function setRing(k) { const C = RING[k]; bcircle.style.setProperty('--ring', C[0]); bcircle.style.setProperty('--glow', C[1]); }
   function drawIdle() {
+    setRing('in');
     bcircle.style.transform = 'scale(.55)'; blabel.textContent = st.breath ? 'Pripravené' : ''; bcount.textContent = ''; bhint.textContent = '';
   }
   function drawBreath() {
@@ -778,6 +812,7 @@ function measureTone(p) {
     const x = Math.min(1, (t - sg.start) / sg.dur), e = sg.free ? 0.45 : sg.e0 + (sg.e1 - sg.e0) * sm(x);
     bcircle.style.transform = 'scale(' + (0.5 + 0.5 * e).toFixed(3) + ')';
     blabel.textContent = sg.label;
+    setRing(sg.free ? 'free' : sg.e1 > sg.e0 + 1e-6 ? 'in' : sg.e1 < sg.e0 - 1e-6 ? 'out' : sg.e0 > 0.5 ? 'hold' : 'rest');
     bcount.textContent = sg.dur >= 3 ? String(Math.max(1, Math.ceil(sg.dur - (t - sg.start)))) : '';
     bhint.textContent = st.breath === 'horizont' ? HORIZONT[Math.floor(Math.max(0, el) / 300) % 3] : '';
   }
