@@ -106,9 +106,9 @@ h1 { font-family: var(--display); font-weight: 600; font-size: 22px; margin: 6px
 .bstage{position:relative;width:200px;height:200px;display:grid;place-items:center}
 .bcircle{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 38%,#33569f 0%,#17285a 72%);box-shadow:inset 0 0 0 4px var(--ring,#7fd6c2),0 0 42px var(--glow,rgba(127,214,194,.22));transform:scale(.55);will-change:transform}
 .btxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:var(--display);pointer-events:none}
-.btxt b{display:block;font-size:19px;font-weight:700;line-height:1.15;letter-spacing:.01em}
+.btxt b{display:none;font-size:19px;font-weight:700;line-height:1.15;letter-spacing:.01em}
 .btxt span{display:block;min-height:56px;font-size:52px;font-weight:800;line-height:56px;text-align:center;font-variant-numeric:tabular-nums;color:#fff}
-.blegend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;font-size:12px;color:var(--muted)}.blegend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.blegend{display:flex;flex-direction:column;align-items:flex-start;gap:5px;font-size:12px;color:var(--muted)}.blegend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 .note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
 
 .row { display: grid; grid-template-columns: 24px 96px 1fr 44px; align-items: center; gap: 8px; }
@@ -208,7 +208,7 @@ details ul { margin: 6px 0 0; padding-left: 18px; }
     <div class="chips" id="bchips" role="group" aria-label="Účel dýchania"></div>
     <div class="bwrap" id="bwrap" style="display:none">
       <div class="bstage"><i class="bcircle" id="bcircle"></i><div class="btxt"><b id="blabel">Pripravené</b><span id="bcount"></span></div></div>
-      <div class="blegend" aria-hidden="true"><span><i style="background:#7fd6c2"></i>nádych</span><span><i style="background:#f0b96b"></i>výdych</span><span><i style="background:#e9edf9"></i>zadržanie</span><span><i style="background:#5b6fa8"></i>pauza</span></div>
+      <div class="blegend" aria-hidden="true"><span><i style="background:#7fd6c2"></i>nádych: tyrkysová, tón stúpa</span><span><i style="background:#f0b96b"></i>výdych: oranžová, tón klesá</span><span><i style="background:#e9edf9"></i>zadržanie: biela, rovný vysoký tón</span><span><i style="background:#5b6fa8"></i>pauza: tmavomodrá, rovný nízky tón</span></div>
       <p class="note" id="bname" style="text-align:center"></p>
     </div>
     <p class="tip" id="bdesc" style="margin:0"></p>
@@ -399,13 +399,13 @@ function markLayer(id, NN) {
   for (let u0 = 0; u0 < NN; u0 += U) {
     for (const sg of P.segs) {
       if (sg.free) continue;
-      const s0 = u0 + Math.round(sg.start * SR), d = Math.min(0.5, sg.dur * 0.5), n = Math.round(d * SR);
+      const s0 = u0 + Math.round(sg.start * SR), d = Math.min(0.8, sg.dur * 0.6), n = Math.round(d * SR);
       let f0, f1;
       if (sg.e1 > sg.e0 + 1e-6) { f0 = 392; f1 = 523; } else if (sg.e1 < sg.e0 - 1e-6) { f0 = 523; f1 = 392; } else if (sg.e0 > 0.5) { f0 = f1 = 523; } else { f0 = f1 = 330; }
       let ph = 0;
       for (let j = 0; j < n && s0 + j < NN; j++) {
         const x = j / n, f = f0 + (f1 - f0) * x, env = Math.min(1, j / (0.03 * SR)) * (1 - x);
-        ph += TAU * f / SR; out[s0 + j] += 0.32 * env * Math.sin(ph);
+        ph += TAU * f / SR; out[s0 + j] += 2.0 * env * (Math.sin(ph) + 0.35 * Math.sin(2 * ph));
       }
     }
   }
@@ -503,7 +503,7 @@ function measureTone(p) {
   const $ = id => document.getElementById(id);
   const audio = $('audio');
   const KEY = 'beaty-v4';
-  const defaults = { mode: 'bin', fl: 200, fr: 210, tone: 60, master: 80, bal: 0, auto: true, gapless: true, timer: 0, lv: { birds: 0, chimes: 0 }, breath: '', breathLv: 70, markLv: 60 };
+  const defaults = { mode: 'bin', fl: 200, fr: 210, tone: 60, master: 80, bal: 0, auto: true, gapless: true, timer: 0, lv: { birds: 0, chimes: 0 }, breath: '', breathLv: 70, markLv: 85 };
   let st = JSON.parse(JSON.stringify(defaults));
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
