@@ -49,9 +49,11 @@ p { margin:0 0 10px; }
 .stg { flex:1; text-align:center; font-size:12px; padding:6px 4px; border-radius:999px; border:1px solid var(--line); color:var(--muted); }
 .stg[data-on="1"] { color:var(--accent-ink); background:var(--accent); border-color:var(--accent); font-weight:600; }
 .bstage { position:relative; width:190px; height:190px; display:grid; place-items:center; margin:6px 0; }
-.bcircle { position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 50% 38%,#33569f 0%,#17285a 72%); box-shadow:inset 0 0 0 2px var(--accent),0 0 42px rgba(127,214,194,.22); transform:scale(.55); will-change:transform; }
+.bcircle { position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 50% 38%,#33569f 0%,#17285a 72%); box-shadow:inset 0 0 0 4px var(--ring,#7fd6c2),0 0 42px var(--glow,rgba(127,214,194,.22)); transform:scale(.55); will-change:transform; }
 .btxt { position:relative; text-align:center; font-family:var(--display); pointer-events:none; }
-.btxt b { display:block; font-size:22px; font-weight:600; line-height:1.15; }
+.btxt b { display:block; font-size:18px; font-weight:600; line-height:1.15; min-height:22px; }
+.legend { display:flex; flex-wrap:wrap; justify-content:center; gap:6px 14px; font-size:12px; color:var(--muted); }
+.legend i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; vertical-align:-1px; }
 .btxt span { display:block; min-height:36px; font-size:32px; font-variant-numeric:tabular-nums; color:var(--accent); }
 #remain { font-size:14px; color:var(--amber); font-variant-numeric:tabular-nums; min-height:20px; }
 #status { min-height:20px; font-size:14px; color:var(--muted); text-align:center; text-wrap:balance; }
@@ -116,6 +118,7 @@ a { color:var(--accent); }
   <div class="hero">
     <div class="stages" id="stages" aria-hidden="true"></div>
     <div class="bstage"><i class="bcircle" id="bcircle"></i><div class="btxt"><b id="blabel">Pripravené</b><span id="bcount"></span></div></div>
+    <div class="legend" aria-hidden="true"><span><i style="background:#7fd6c2"></i>nádych</span><span><i style="background:#f0b96b"></i>výdych</span><span><i style="background:#e9edf9"></i>zadržanie</span><span><i style="background:#5b6fa8"></i>pauza</span></div>
     <div id="remain"></div>
     <div id="attn"></div>
     <div class="ctrl">
@@ -184,7 +187,7 @@ a { color:var(--accent); }
   <section class="card">
     <h4>Čo robí táto aplikácia</h4>
     <ol>
-      <li><b>Dych.</b> Kruh sa nafukuje pri nádychu a zmenšuje pri výdychu, aj s odpočtom sekúnd. K tomu hrá zvuk, ktorý dych vedie: buď šum vlnenia (pri nádychu sýtejší, pri výdychu tichý), alebo jemný tón (stúpa a klesá). Môžeš ho vypnúť.</li>
+      <li><b>Dych.</b> Kruh sa nafukuje pri nádychu a zmenšuje pri výdychu, aj s odpočtom sekúnd. Okraj kruhu má pri nádychu zelenú farbu, pri výdychu oranžovú, pri zadržaní bielu a pri pauze tmavomodrú. K tomu hrá zvuk, ktorý dych vedie: buď šum vlnenia (pri nádychu sýtejší, pri výdychu tichý), alebo jemný tón (stúpa a klesá). Môžeš ho vypnúť. Pri každej zmene fázy zaznie aj krátky signál: stúpajúci tón znamená nádych, klesajúci výdych a rovný tón zadržanie alebo pauzu, takže by si mal vedieť dych sledovať aj so zavretými očami.</li>
       <li><b>Tóny do uší.</b> Dva tóny, každý do iného ucha. Rozdiel medzi nimi sa v prvých minútach relácie plynule mení a potom ostáva stály, napríklad pri Poklese z 8 na 2 Hz. V sekcii „Čo práve počuješ“ vidíš presné čísla v danej sekunde.</li>
       <li><b>Zvuky prírody.</b> Voliteľné pozadie (vtáky, zvonkohra). Pri niektorých reláciách je zapnuté jemne, môžeš ho vypnúť.</li>
       <li><b>Oblúk relácie.</b> Rozbeh (pár minút na naladenie), jadro a doznievanie. Na konci sa zvuk sám stíši a prehrávanie skončí.</li>
@@ -407,12 +410,12 @@ function earGains(fl, fr) {
 class Engine {
   constructor(ctx, dest, S, o) { this.ctx = ctx; this.dest = dest; this.S = S; this.o = o; this.layers = {}; this.stopped = false; }
   start() {
-    const c = this.ctx, S = this.S, o = this.o, t0 = this.t0 = c.currentTime + 0.2;
+    const c = this.ctx, S = this.S, o = this.o, tS = c.currentTime + 0.05, t0 = this.t0 = tS + 2.7;
     const tl = this.tl = buildTimeline(S, o.total);
     this.finite = tl.finite;
     this.ramp = tl.finite ? Math.min(300, 0.4 * tl.total) : 300;
     const master = this.master = c.createGain();
-    master.gain.setValueAtTime(0, t0); master.gain.linearRampToValueAtTime(0.8, t0 + 2.5);
+    master.gain.setValueAtTime(0, tS); master.gain.linearRampToValueAtTime(0.8, tS + 2.5);
     const comp = c.createDynamicsCompressor();
     comp.threshold.value = -8; comp.knee.value = 10; comp.ratio.value = 8; comp.attack.value = 0.01; comp.release.value = 0.25;
     master.connect(comp); comp.connect(this.dest);
@@ -421,14 +424,14 @@ class Engine {
     const fl = S.fl, b0 = S.beat[0], b1 = S.beat[1], eg = earGains(fl, fl + b1);
     const oL = c.createOscillator(), oR = c.createOscillator();
     oL.frequency.value = fl;
-    oR.frequency.setValueAtTime(fl + b0, t0);
+    oR.frequency.setValueAtTime(fl + b0, tS); oR.frequency.setValueAtTime(fl + b0, t0);
     oR.frequency.linearRampToValueAtTime(fl + b1, t0 + this.ramp);
     const gL = c.createGain(), gR = c.createGain(); gL.gain.value = 0.3 * eg[0]; gR.gain.value = 0.3 * eg[1];
     const mg = c.createChannelMerger(2);
     oL.connect(gL); gL.connect(mg, 0, 0); oR.connect(gR); gR.connect(mg, 0, 1);
     const toneGain = this.toneGain = c.createGain(); toneGain.gain.value = o.toneLv / 100;
     mg.connect(toneGain); toneGain.connect(master);
-    oL.start(t0); oR.start(t0); this.srcs.push(oL, oR);
+    oL.start(tS); oR.start(tS); this.srcs.push(oL, oR);
     // vedenie dychu: šum (vlnenie) a tón
     const nb = c.createBuffer(1, Math.round(c.sampleRate * 3), c.sampleRate), nd = nb.getChannelData(0);
     let seed = 2463534242;
@@ -443,7 +446,13 @@ class Engine {
     const gl = this.guideLvl = c.createGain(); gl.gain.value = o.breathLv / 100;
     ns.connect(lp); lp.connect(wEnv); wEnv.connect(wSel); wSel.connect(gl);
     go.connect(tEnv); tEnv.connect(tSel); tSel.connect(gl); gl.connect(master);
-    ns.start(t0); go.start(t0); this.srcs.push(ns, go);
+    ns.start(tS); go.start(tS); this.srcs.push(ns, go);
+    // signály zmeny fázy: stúpajúci tón = nádych, klesajúci = výdych, rovný tón = zadržanie alebo pauza
+    const mo = this.mosc = c.createOscillator(); mo.frequency.value = 440;
+    const mEnv = this.mEnv = c.createGain(); mEnv.gain.value = 0;
+    const ml = this.markLvl = c.createGain(); ml.gain.value = (o.markLv == null ? 60 : o.markLv) / 100;
+    mo.connect(mEnv); mEnv.connect(ml); ml.connect(master); mo.start(tS); this.srcs.push(mo);
+    this.scheduleMarks(0);
     this.setGuide(o.guide, true);
     // zvuky prírody
     LAYERS.forEach(l => { if (o.bufs && o.bufs[l.id]) this.addLayer(l.id, o.bufs[l.id]); });
@@ -498,6 +507,7 @@ class Engine {
     else { this.wEnv.gain.setValueAtTime(0, now); this.tEnv.gain.setValueAtTime(0, now); return; }
     const eNow = this.eAt(now - t0);
     act.forEach(([p, f]) => p.setValueAtTime(f(eNow), now));
+    act.forEach(([p, f]) => p.setValueAtTime(f(0), Math.max(now, t0)));
     {
       for (const ph of this.tl.phases) {
         const a = t0 + ph.start, b = a + ph.dur;
@@ -511,7 +521,24 @@ class Engine {
       }
     }
   }
-  extend() { extendTimeline(this.tl, this.S, EXT_CHUNK); this.scheduleGuide(this.ctx.currentTime); }
+  scheduleMarks(fromT) {
+    const c = this.ctx, t0 = this.t0, now = Math.max(fromT || 0, c.currentTime) + 0.02, F = this.mosc.frequency, G = this.mEnv.gain, PK = 0.32;
+    F.cancelScheduledValues(now); G.cancelScheduledValues(now); if (fromT) G.linearRampToValueAtTime(0, now + 0.005); else G.setValueAtTime(0, now);
+    for (const ph of this.tl.phases) {
+      const a = t0 + ph.start;
+      if (a < now || ph.free) continue;
+      const d = Math.min(0.5, ph.dur * 0.5);
+      let f0, f1;
+      if (ph.e1 > ph.e0 + 1e-6) { f0 = 392; f1 = 523; }          // nádych: stúpa
+      else if (ph.e1 < ph.e0 - 1e-6) { f0 = 523; f1 = 392; }     // výdych: klesá
+      else if (ph.e0 > 0.5) { f0 = f1 = 523; }                   // zadržanie s plnými pľúcami
+      else { f0 = f1 = 330; }                                    // pauza naprázdno
+      F.setValueAtTime(f0, a); if (f1 !== f0) F.linearRampToValueAtTime(f1, a + d);
+      G.setValueAtTime(0, a); G.linearRampToValueAtTime(PK, a + 0.03); G.linearRampToValueAtTime(0, a + d);
+    }
+  }
+  setMarks(v) { this.o.markLv = v; this.markLvl.gain.setTargetAtTime(v / 100, this.ctx.currentTime, 0.05); }
+  extend() { extendTimeline(this.tl, this.S, EXT_CHUNK); this.scheduleGuide(this.ctx.currentTime); this.scheduleMarks(this.ctx.currentTime); }
   stop() {
     if (this.stopped) return; this.stopped = true;
     const c = this.ctx, now = c.currentTime;
@@ -538,7 +565,7 @@ function makeLoopBuf(ctx, ab, secs) {   // plynulá slučka prelínaná do zači
   const $ = id => document.getElementById(id);
   const audio = $('audio');
   const KEY = 'stastie2';
-  let st = { toneLv: 70, breathLv: 70, guide: 'wave', min: {}, lv: {} };
+  let st = { toneLv: 70, breathLv: 70, markLv: 60, guide: 'wave', min: {}, lv: {} };
   try { const sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && typeof sv === 'object') st = Object.assign(st, sv, { min: Object.assign({}, sv.min || {}), lv: Object.assign({}, sv.lv || {}) }); } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
   const fmt = v => String(Math.round(v * 10) / 10).replace('.', ',');
@@ -604,6 +631,7 @@ function makeLoopBuf(ctx, ab, secs) {   // plynulá slučka prelínaná do zači
     const add = (t, body) => { const d = document.createElement('div'); const bb = document.createElement('b'); bb.textContent = t; const p = document.createElement('span'); p.innerHTML = body; d.appendChild(bb); d.appendChild(p); h.appendChild(d); };
     add('Dva tóny, každý do iného ucha', 'Ľavé ucho <span class="v">' + fmt(S.fl) + ' Hz</span>, pravé ucho <span class="v">' + fmt(S.fl + b) + ' Hz</span>. Rozdiel je <span class="v">' + fmt(b) + ' Hz</span>, takže mozog vníma vlnenie ' + fmt(b) + '-krát za sekundu (pásmo ' + bandOf(b) + '). V prvých ' + rampMin(S) + ' min relácie sa rozdiel plynule mení z ' + S.beat[0] + ' na ' + S.beat[1] + ' Hz a potom ostáva stály.');
     add('Vedenie dychu', glabel);
+    add('Signály nádychu a výdychu', st.markLv > 0 ? 'Pri každej zmene krátky tón: <b>stúpajúci</b> znamená nádych, <b>klesajúci</b> výdych, <b>rovný vyšší tón</b> zadržanie a <b>rovný nižší tón</b> pauzu. Dych by si tak mal vedieť sledovať aj so zavretými očami.' : 'Vypnuté. Zmenu fázy vieš vyčítať len zo šumu a z kruhu.');
     add('Zvuky prírody', nat.length ? nat.join(', ') + '. Len ako jemné pozadie.' : 'Vypnuté.');
     add('Rytmus', S.rhythm + '.');
   }
@@ -628,12 +656,14 @@ function makeLoopBuf(ctx, ab, secs) {   // plynulá slučka prelínaná do zači
     };
     slider('Tóny do uší', 'dva tóny, z ktorých vzniká vlnenie', () => st.toneLv, v => { st.toneLv = v; if (engine) engine.setTone(v); });
     slider('Vedenie dychu', 'šum alebo tón', () => st.breathLv, v => { st.breathLv = v; if (engine) engine.setBreath(v); });
+    slider('Signály nádychu a výdychu', 'tón pri každej zmene', () => st.markLv, v => { st.markLv = v; if (engine) engine.setMarks(v); renderHear(); });
     LAYERS.forEach(l => slider(l.label, 'zvuky prírody', () => lvOf(S, l.id), v => {
       st.lv[S.id] = Object.assign({}, st.lv[S.id], { [l.id]: v }); if (engine) { engine.setLayerLevel(l.id, v); if (v > 0) ensureLayer(l.id); } renderHear();
     }));
   }
 
   // ---------- prehrávač
+  const RING = { in: ['#7fd6c2', 'rgba(127,214,194,.38)'], out: ['#f0b96b', 'rgba(240,185,107,.32)'], hold: ['#e9edf9', 'rgba(233,237,249,.28)'], rest: ['#5b6fa8', 'rgba(91,111,168,.25)'], free: ['#93a0c6', 'rgba(147,160,198,.18)'] };
   const playBtn = $('play'), stopBtn = $('stop'), bcircle = $('bcircle'), blabel = $('blabel'), bcount = $('bcount');
   function setBtn() {
     const on = playing && !paused;
@@ -642,7 +672,7 @@ function makeLoopBuf(ctx, ab, secs) {   // plynulá slučka prelínaná do zači
     stopBtn.dataset.on = (playing || paused) ? '1' : '0';
   }
   function drawIdle() {
-    bcircle.style.transform = 'scale(.55)'; blabel.textContent = finishedFlag ? 'Hotovo' : 'Pripravené'; bcount.textContent = ''; $('remain').textContent = ''; $('attn').textContent = '';
+    bcircle.style.transform = 'scale(.55)'; bcircle.style.removeProperty('--ring'); bcircle.style.removeProperty('--glow'); blabel.textContent = finishedFlag ? 'Hotovo' : 'Pripravené'; bcount.textContent = ''; $('remain').textContent = ''; $('attn').textContent = '';
     stagesBox.childNodes.forEach(s => s.dataset.on = '0');
   }
   function ensureCtx() {
@@ -677,7 +707,7 @@ function makeLoopBuf(ctx, ab, secs) {   // plynulá slučka prelínaná do zači
     ensureCtx();
     const pl = audio.play(); if (pl && pl.catch) pl.catch(() => {});
     const S = cur, lv = {}; LAYERS.forEach(l => { lv[l.id] = lvOf(S, l.id); });
-    engine = new Engine(actx, dest, S, { total: minOf(S) * 60, toneLv: st.toneLv, breathLv: st.breathLv, guide: st.guide, lv: lv, bufs: bufs }).start();
+    engine = new Engine(actx, dest, S, { total: minOf(S) * 60, toneLv: st.toneLv, breathLv: st.breathLv, markLv: st.markLv, guide: st.guide, lv: lv, bufs: bufs }).start();
     LAYERS.forEach(l => { if (lv[l.id] > 0) ensureLayer(l.id); });
     playing = true; paused = false; finishedFlag = false; setBtn(); meta();
     $('status').textContent = 'Hrá. Môžeš zavrieť oči a zamknúť obrazovku.';
@@ -710,12 +740,14 @@ function makeLoopBuf(ctx, ab, secs) {   // plynulá slučka prelínaná do zači
     raf = 0;
     if (!engine || !playing || paused || !actx || document.hidden) return;
     const rel = actx.currentTime - engine.t0;
-    if (rel < 0) { blabel.textContent = 'Pripravujem'; raf = requestAnimationFrame(draw); return; }
+    if (rel < 0) { blabel.textContent = 'Pripravujem'; bcount.textContent = ''; raf = requestAnimationFrame(draw); return; }
     const ph = engine.phaseAt(rel);
-    if (!ph) { bcircle.style.transform = 'scale(.55)'; blabel.textContent = 'Doznieva'; bcount.textContent = ''; $('remain').textContent = ''; raf = requestAnimationFrame(draw); return; }
+    if (!ph) { bcircle.style.transform = 'scale(.55)'; blabel.textContent = 'Doznieva'; bcount.textContent = ''; bcircle.style.removeProperty('--ring'); bcircle.style.removeProperty('--glow'); $('remain').textContent = ''; raf = requestAnimationFrame(draw); return; }
     const x = Math.min(1, (rel - ph.start) / ph.dur), e = ph.free ? 0.45 : ph.e0 + (ph.e1 - ph.e0) * sm(x);
     bcircle.style.transform = 'scale(' + (0.5 + 0.5 * e).toFixed(3) + ')';
-    blabel.textContent = ph.label;
+    const kind = ph.free ? 'free' : ph.e1 > ph.e0 + 1e-6 ? 'in' : ph.e1 < ph.e0 - 1e-6 ? 'out' : ph.e0 > 0.5 ? 'hold' : 'rest', C = RING[kind];
+    bcircle.style.setProperty('--ring', C[0]); bcircle.style.setProperty('--glow', C[1]);
+    blabel.textContent = (ph.label === 'Napni telo' || ph.label === 'Voľne dýchaj') ? ph.label : '';
     bcount.textContent = ph.dur >= 3 ? String(Math.max(1, Math.ceil(ph.dur - (rel - ph.start)))) : '';
     stagesBox.childNodes.forEach(s => s.dataset.on = s.dataset.k === ph.stage ? '1' : '0');
     $('remain').textContent = engine.finite ? 'Zostáva ' + mmss(engine.tl.total - rel) : 'Uplynulo ' + mmss(rel);
