@@ -5,131 +5,89 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Šťastie">
-<meta name="theme-color" content="#0a1124">
+<meta name="theme-color" content="#090f21">
 <title>Generátor Šťastia</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
-/* Layout idea: one calm night column. A hero with the beat number, its brainwave band and the play button, then cards for frequencies, sounds, volume and timer. */
-:root {
-  --bg: #090f21;
-  --surface: #111a34;
-  --surface-2: #19254a;
-  --line: #28386a;
-  --text: #e9edf9;
-  --muted: #93a0c6;
-  --accent: #7fd6c2;
-  --accent-ink: #062019;
-  --amber: #f0b96b;
-  --display: "Sora", -apple-system, "Segoe UI", system-ui, sans-serif;
-  --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
-  color-scheme: dark;
-}
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); }
-body { min-height: 100%; padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(30px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
-main { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
-h1 { font-family: var(--display); font-weight: 600; font-size: 22px; margin: 6px 2px 0; letter-spacing: -0.005em; color: var(--muted); }
-
-.hero { background: radial-gradient(120% 90% at 50% 0%, #1b2b5a 0%, var(--surface) 62%); border: 1px solid var(--line); border-radius: 26px; padding: 22px 18px 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-.beat-big { display: flex; align-items: baseline; gap: 8px; font-family: var(--display); font-variant-numeric: tabular-nums; }
-.beat-big b { font-size: 64px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
-.beat-big small { font-size: 22px; color: var(--muted); }
-.band { font-size: 15px; color: var(--accent); margin-top: -8px; text-align: center; }
-
-.scale { width: 100%; position: relative; padding-top: 6px; }
-.segs { display: flex; gap: 3px; height: 10px; }
-.seg { background: var(--surface-2); border-radius: 5px; transition: background .2s; }
-.seg[data-on="1"] { background: var(--accent); }
-.marker { position: absolute; top: 0; width: 2px; height: 22px; background: var(--text); border-radius: 2px; transform: translateX(-1px); transition: left .15s; }
-.seglabels { display: flex; gap: 3px; margin-top: 6px; font-size: 11px; color: var(--muted); }
-.seglabels span { text-align: center; overflow: visible; white-space: nowrap; }
-
-.playwrap { position: relative; width: 112px; height: 112px; margin: 6px 0 2px; }
-#play { position: relative; z-index: 1; width: 112px; height: 112px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; cursor: pointer; transition: transform .08s, background .2s; }
-#play:active { transform: scale(.96); }
-#play svg { width: 40px; height: 40px; fill: currentColor; }
-#play .i-stop, #play .i-busy { display: none; }
-#play[data-state="on"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 2px var(--accent); }
-#play[data-state="on"] .i-play, #play[data-state="busy"] .i-play { display: none; }
-#play[data-state="on"] .i-stop { display: block; }
-#play[data-state="busy"] { background: var(--surface-2); color: var(--muted); }
-#play[data-state="busy"] .i-busy { display: block; animation: spin 1s linear infinite; }
-.ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--accent); opacity: 0; pointer-events: none; }
-.playwrap[data-on="1"] .ring { animation: pulse 3.2s ease-out infinite; }
-.playwrap[data-on="1"] .ring.r2 { animation-delay: 1.6s; }
-@keyframes pulse { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(1.55); opacity: 0; } }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-#status { min-height: 20px; font-size: 14px; color: var(--muted); text-align: center; text-wrap: balance; }
-#left { min-height: 18px; font-size: 14px; color: var(--amber); font-variant-numeric: tabular-nums; margin-top: -8px; }
-
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-.card h2 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
-
-.freqs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.freq { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.freq label { font-size: 13px; color: var(--muted); }
-.stepper { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; gap: 5px; }
-.stepper button { border: 1px solid var(--line); background: var(--surface-2); color: var(--text); border-radius: 12px; font-size: 20px; line-height: 1; cursor: pointer; padding: 0; min-height: 52px; }
-.stepper button:active { background: var(--line); }
-.stepper input { width: 100%; min-width: 0; text-align: center; border: 1px solid var(--line); background: var(--bg); color: var(--text); border-radius: 12px; font: 600 24px var(--display); padding: 10px 2px; font-variant-numeric: tabular-nums; }
-.unit { font-size: 12px; color: var(--muted); text-align: center; }
-
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { border: 1px solid var(--line); background: var(--surface-2); color: var(--text); border-radius: 999px; padding: 9px 14px; font: 500 14px var(--body); cursor: pointer; min-height: 40px; }
-.chip small { color: var(--muted); font-size: 12px; margin-left: 4px; }
-.chip[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-
-.hint { margin: 0; font-size: 13px; line-height: 1.45; color: var(--amber); }
-.hint:empty { display: none; }
-.foot { text-align: center; margin: 22px 0 8px; font-size: 13px; letter-spacing: .08em; color: var(--muted); }
-.zone { margin: 0 0 14px; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
-.zone h4 { margin: 0 0 4px; font-size: 14.5px; color: var(--text); }
-.zone h4 span { color: #7fd6c4; font-weight: 600; margin-right: 6px; }
-.zone p { margin: 0; }
-.info .fq { margin: 8px 0 0; padding: 0; list-style: none; }
-.info .fq li { margin: 0 0 5px; padding-left: 0; }
-.info .fq b { color: var(--text); }
-.tip { margin: -4px 2px 14px; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
-.tip b { color: var(--text, #e8ecff); }
-.info h3 { margin: 16px 0 6px; font-size: 14px; }
-.info p, .info li { font-size: 13.5px; line-height: 1.6; color: var(--muted); margin: 0 0 8px; }
-.info ul { margin: 0 0 8px; padding-left: 18px; }
-.info table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 6px 0 10px; }
-.info td, .info th { text-align: left; padding: 7px 6px; border-bottom: 1px solid rgba(255,255,255,.08); vertical-align: top; color: var(--muted); }
-.info th { color: inherit; font-weight: 600; }
-
 @font-face{font-family:"Sora";font-style:normal;font-weight:100 800;font-display:swap;src:url(fonts/sora-latin-ext-wght-normal.woff2) format("woff2-variations");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:"Sora";font-style:normal;font-weight:100 800;font-display:swap;src:url(fonts/sora-latin-wght-normal.woff2) format("woff2-variations");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-.bwrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0 2px}
-.bstage{position:relative;width:200px;height:200px;display:grid;place-items:center}
-.bcircle{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 38%,#33569f 0%,#17285a 72%);box-shadow:inset 0 0 0 4px var(--ring,#7fd6c2),0 0 42px var(--glow,rgba(127,214,194,.22));transform:scale(.55);will-change:transform}
-.btxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:var(--display);pointer-events:none}
-.btxt b{display:none;font-size:19px;font-weight:700;line-height:1.15;letter-spacing:.01em}
-.btxt span{display:block;min-height:56px;font-size:52px;font-weight:800;line-height:56px;text-align:center;font-variant-numeric:tabular-nums;color:#fff}
-.blegend{display:flex;flex-direction:column;align-items:flex-start;gap:5px;font-size:12px;color:var(--muted)}.blegend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
-.note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+:root { --bg:#090f21; --surface:#111a34; --surface-2:#19254a; --line:#28386a; --text:#e9edf9; --muted:#93a0c6; --accent:#7fd6c2; --accent-ink:#062019; --amber:#f0b96b;
+  --display:"Sora",-apple-system,"Segoe UI",system-ui,sans-serif; --body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif; color-scheme:dark; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { margin:0; background:var(--bg); color:var(--text); font-family:var(--body); }
+body { min-height:100%; padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(34px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
+main { max-width:520px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+h1 { font-family:var(--display); font-weight:600; font-size:26px; margin:8px 2px 0; letter-spacing:-.01em; }
+h2 { font-family:var(--display); font-weight:600; font-size:22px; margin:6px 2px 0; }
+h3 { margin:16px 0 6px; font-size:15px; }
+p { margin:0 0 10px; }
+.lead { font-size:15px; line-height:1.55; color:var(--muted); margin:0 2px; }
+.screen { display:none; flex-direction:column; gap:14px; }
+.screen[data-on="1"] { display:flex; }
+.card { background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+.card h4 { margin:0; font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+.card p, .card li { font-size:14px; line-height:1.6; color:var(--muted); margin:0; }
+.card ul, .card ol { margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px; }
+.card b, .card strong { color:var(--text); font-weight:600; }
+.tag { display:inline-block; font-size:11px; letter-spacing:.06em; text-transform:uppercase; padding:2px 8px; border-radius:999px; border:1px solid var(--line); margin-right:6px; vertical-align:1px; }
+.tag.ok { color:var(--accent); border-color:var(--accent); }
+.tag.tr { color:var(--amber); border-color:var(--amber); }
+.tag.own { color:#b9a6ff; border-color:#b9a6ff; }
 
-.row { display: grid; grid-template-columns: 24px 96px 1fr 44px; align-items: center; gap: 8px; }
-.row svg { width: 22px; height: 22px; stroke: var(--muted); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.row label { font-size: 15px; }
-.row output { font-size: 13px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
-.row.plain { grid-template-columns: 1fr 44px; }
-.row.plain .l { grid-column: 1 / -1; display: flex; justify-content: space-between; font-size: 15px; }
-.row.plain .l span { color: var(--muted); font-size: 13px; }
-input[type="range"] { width: 100%; accent-color: var(--accent); height: 32px; margin: 0; }
+.sess { display:grid; grid-template-columns:1fr auto; gap:4px 12px; align-items:center; width:100%; text-align:left; color:var(--text); background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:14px 16px; cursor:pointer; font:inherit; }
+.sess:active { background:var(--surface-2); }
+.sess .n { font-size:12px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); }
+.sess .p { font-family:var(--display); font-weight:600; font-size:20px; grid-column:1; }
+.sess .b { grid-column:1; font-size:13.5px; line-height:1.45; color:var(--muted); }
+.sess .m { grid-column:2; grid-row:1 / span 3; align-self:center; font-size:13px; color:var(--muted); text-align:right; }
+.linkbtn { background:none; border:1px solid var(--line); color:var(--text); border-radius:14px; padding:13px 14px; font:500 15px var(--body); cursor:pointer; text-align:center; text-decoration:none; display:block; }
+.linkbtn:active { background:var(--surface-2); }
+.back { align-self:flex-start; background:none; border:0; color:var(--muted); font:500 15px var(--body); padding:8px 2px; cursor:pointer; }
 
-.toggle { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
-.toggle b { font-weight: 500; font-size: 15px; display: block; color: var(--text); }
-.toggle span { font-size: 12.5px; color: var(--muted); line-height: 1.4; display: block; margin-top: 2px; }
-.toggle input { width: 26px; height: 26px; accent-color: var(--accent); margin: 0; }
+.hero { background:radial-gradient(120% 90% at 50% 0%,#1b2b5a 0%,var(--surface) 62%); border:1px solid var(--line); border-radius:26px; padding:20px 16px 18px; display:flex; flex-direction:column; align-items:center; gap:12px; }
+.stages { display:flex; gap:6px; width:100%; }
+.stg { flex:1; text-align:center; font-size:12px; padding:6px 4px; border-radius:999px; border:1px solid var(--line); color:var(--muted); }
+.stg[data-on="1"] { color:var(--accent-ink); background:var(--accent); border-color:var(--accent); font-weight:600; }
+.bstage { position:relative; width:190px; height:190px; display:grid; place-items:center; margin:6px 0; }
+.bcircle { position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 50% 38%,#33569f 0%,#17285a 72%); box-shadow:inset 0 0 0 4px var(--ring,#7fd6c2),0 0 42px var(--glow,rgba(127,214,194,.22)); transform:scale(.55); will-change:transform; }
+.btxt { position:relative; text-align:center; font-family:var(--display); pointer-events:none; }
+.btxt b { display:block; font-size:18px; font-weight:600; line-height:1.15; min-height:22px; }
+.legend { display:flex; flex-wrap:wrap; justify-content:center; gap:6px 14px; font-size:12px; color:var(--muted); }
+.legend i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; vertical-align:-1px; }
+.btxt span { display:block; min-height:36px; font-size:32px; font-variant-numeric:tabular-nums; color:var(--accent); }
+#remain { font-size:14px; color:var(--amber); font-variant-numeric:tabular-nums; min-height:20px; }
+#status { min-height:20px; font-size:14px; color:var(--muted); text-align:center; text-wrap:balance; }
+#attn { min-height:20px; font-size:14px; color:var(--amber); text-align:center; line-height:1.4; }
+.ctrl { display:flex; gap:12px; align-items:center; }
+#play { width:96px; height:96px; border-radius:50%; border:0; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; cursor:pointer; }
+#play:active { transform:scale(.96); }
+#play svg { width:36px; height:36px; fill:currentColor; }
+#play .i-pause { display:none; }
+#play[data-state="on"] { background:var(--surface-2); color:var(--text); box-shadow:inset 0 0 0 2px var(--accent); }
+#play[data-state="on"] .i-play { display:none; }
+#play[data-state="on"] .i-pause { display:block; }
+#stop { border:1px solid var(--line); background:var(--surface-2); color:var(--text); border-radius:999px; padding:12px 18px; font:500 15px var(--body); cursor:pointer; display:none; }
+#stop[data-on="1"] { display:block; }
 
-details { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
-details summary { cursor: pointer; padding: 6px 0; }
-details ul { margin: 6px 0 0; padding-left: 18px; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.chips { display:flex; flex-wrap:wrap; gap:8px; }
+.chip { border:1px solid var(--line); background:var(--surface-2); color:var(--text); border-radius:999px; padding:9px 14px; font:500 14px var(--body); cursor:pointer; min-height:40px; }
+.chip[aria-pressed="true"] { border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+.hear { display:flex; flex-direction:column; gap:12px; }
+.hear div { border-left:2px solid var(--accent); padding-left:12px; }
+.hear b { display:block; margin-bottom:2px; }
+.hear .v { color:var(--text); font-variant-numeric:tabular-nums; }
+.row { display:grid; grid-template-columns:1fr 44px; align-items:center; gap:4px 8px; }
+.row .l { grid-column:1 / -1; display:flex; justify-content:space-between; font-size:15px; color:var(--text); }
+.row .l span { color:var(--muted); font-size:13px; }
+.row output { font-size:13px; color:var(--muted); text-align:right; font-variant-numeric:tabular-nums; }
+input[type="range"] { width:100%; accent-color:var(--accent); height:32px; margin:0; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+td,th { text-align:left; padding:7px 6px; border-bottom:1px solid rgba(255,255,255,.08); vertical-align:top; color:var(--muted); }
+th { color:var(--text); font-weight:600; }
+a { color:var(--accent); }
+.src li { font-size:13px; }
+.foot { text-align:center; margin:18px 0 6px; font-size:13px; letter-spacing:.08em; color:var(--muted); }
+:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+@media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -137,186 +95,295 @@ details ul { margin: 6px 0 0; padding-left: 18px; }
 </head>
 <body>
 <main>
+
+<!-- ============ DOMOV ============ -->
+<section class="screen" id="home" data-on="1">
   <h1>Generátor Šťastia</h1>
-  <a href="v2/" style="display:block;margin:0 2px 2px;padding:12px 14px;border:1px solid var(--accent);border-radius:14px;color:var(--accent);font-size:14px;text-decoration:none">Nová jednoduchšia verzia: vyber účel a stlač Spustiť →</a>
-  <section class="card info" aria-labelledby="h-how">
-    <h2 id="h-how">Svet, ktorý kmitá</h2>
-    <p>Zastav sa na chvíľu a započúvaj sa. Zvuk, ktorý počuješ, je kmitanie vzduchu, ktoré tvoje ucho premení na tón. Počet kmitov za sekundu sa volá frekvencia a meria sa v hertzoch (Hz). Ucho dospelého človeka počuje zhruba od 20 do 20 000 Hz.</p>
-    <p>A nie je to len zvuk. Svetlo je tiež kmitanie, len elektromagnetického poľa a oveľa rýchlejšie: stovky biliónov kmitov za sekundu. Tvoje srdce v pokoji bije približne raz za sekundu, teda okolo 1 Hz. Mozog vytvára elektrické vlny, ktoré vedci merajú prístrojom EEG a delia ich do pásiem. Aj samotná Zem má svoj rytmus: Schumannova rezonancia, kmitanie medzi zemským povrchom a ionosférou, sa pohybuje okolo 7,8 Hz.</p>
-    <p>Svet je teda plný rytmov. Tu si môžeš vybrať sám: od jedného čistého tónu až po dva tóny, z ktorých sa v tvojej hlave zrodí niečo nové. Prečítaj si pár riadkov a pusť sa do objavovania.</p>
+  <p class="lead">Dýchanie so zvukom. Vyber, čo práve potrebuješ, nasaď si slúchadlá a stlač Spustiť. Aplikácia ti nastaví dych, tóny aj zvuky a povedie ťa celou reláciou: rozbehom, jadrom a doznievaním.</p>
+  <div id="list" style="display:flex;flex-direction:column;gap:10px"></div>
+  <button class="linkbtn" id="goAbout" type="button">Čo presne počuješ a ako to funguje</button>
+  <a class="linkbtn" href="pokrocile/">Pokročilé funkcie: vysvetlivky a vlastné nastavenie</a>
+  <footer class="foot">Lucky Sky LLC</footer>
+</section>
 
-    <h3>Výprava za tónmi: od hlbokého basu po jasné výšky</h3>
-    <p>Každá výška má svoju náladu. Prejdi si ich zdola nahor. Pri každej nájdeš aj známe frekvencie, o ktorých sa hovorí najviac. Ich významy sú tradičné, nie vedecké, tak ich ber ako inšpiráciu na objavovanie.</p>
-    <div class="zone"><h4><span>50 – 100 Hz</span> Hlboký bas</h4><p>Skôr ho cítiš v tele než ušami. Slúchadlá ho prehrajú slabo, preto aplikácia sama dorovnáva hlasitosť.</p></div>
-    <div class="zone"><h4><span>100 – 200 Hz</span> Teplý spodok</h4><p>Hlboký a zaoblený tón, ktorý znie pokojne a vážne.</p><ul class="fq"><li><b>136,1 Hz</b> „Om", tradične tón Zeme, odvodený z jej ročného obehu okolo Slnka</li></ul></div>
-    <div class="zone"><h4><span>200 – 400 Hz</span> Mäkký stred</h4><p>Plný, hrejivý a príjemný. Na dlhé počúvanie je najlepší, preto sme tu nastavili aj základ 200 a 210 Hz.</p><ul class="fq"><li><b>285 Hz</b> Solfeggio: telo a regenerácia</li><li><b>396 Hz</b> Solfeggio: oslobodenie od strachu a viny</li></ul></div>
-    <div class="zone"><h4><span>400 – 700 Hz</span> Jasný stred</h4><p>Výraznejší a svetlejší tón, ktorý nesie viac energie.</p><ul class="fq"><li><b>417 Hz</b> Solfeggio: zmena a nový začiatok</li><li><b>432 Hz</b> alternatívne ladenie tónu A, ktoré mnohí vnímajú ako „prírodné"</li><li><b>440 Hz</b> komorné A, štandardný ladiaci tón v hudbe</li><li><b>528 Hz</b> Solfeggio: „frekvencia lásky", spája sa s premenou a harmóniou</li><li><b>639 Hz</b> Solfeggio: vzťahy, spojenie a láska k druhým</li></ul></div>
-    <div class="zone"><h4><span>700 – 968 Hz</span> Žiarivé výšky</h4><p>Vysoké a ostré tóny. Pri dlhom počúvaní a vyššej hlasitosti môžu unavovať.</p><ul class="fq"><li><b>741 Hz</b> Solfeggio: vyjadrenie a intuícia</li><li><b>852 Hz</b> Solfeggio: intuícia a vnútorný pokoj</li><li><b>963 Hz</b> Solfeggio: tradične nazývaná frekvencia spojenia s vyšším vedomím a vesmírom</li></ul></div>
-    <p>Vyššie tóny ucho vníma citlivejšie, a preto pri rovnakej hlasitosti znejú silnejšie. Začni potichu. Všetky známe frekvencie nájdeš ako rýchle tlačidlá v režime „Jedna frekvencia".</p>
+<!-- ============ RELÁCIA ============ -->
+<section class="screen" id="sess">
+  <button class="back" id="back" type="button">← Späť</button>
+  <div>
+    <h2 id="sName"></h2>
+    <p class="lead" id="sBlurb"></p>
+  </div>
 
-    <h3>Dve frekvencie, jeden tón</h3>
-    <p>Do každého ucha pošli trochu iný tón. Napríklad 200 Hz do ľavého a 210 Hz do pravého. Tvoj mozog ich spojí do jedného jemne vlniaceho sa tónu. Vlní sa 10-krát za sekundu, pretože 210 − 200 = 10. Čím väčší rozdiel, tým rýchlejšie vlnenie.</p>
-    <p>Potrebuješ slúchadlá, aby každé ucho počulo svoj tón. Najlepšie to funguje, keď sú oba tóny pod 1000 Hz a rozdiel medzi nimi nepresiahne približne 30 Hz.</p>
-    <p>Rozdiel si vyberieš podľa toho, čo práve potrebuješ:</p>
-    <table>
-      <tr><th>Rozdiel</th><th>Pásmo</th><th>Tradične sa spája s</th></tr>
-      <tr><td>0,5 – 4 Hz</td><td>Delta</td><td>hlboký odpočinok a spánok</td></tr>
-      <tr><td>4 – 8 Hz</td><td>Théta</td><td>uvoľnenie, meditácia a driemota</td></tr>
-      <tr><td>8 – 13 Hz</td><td>Alfa</td><td>pokojná a bdelá myseľ</td></tr>
-      <tr><td>13 – 30 Hz</td><td>Beta</td><td>sústredenie a bdelosť</td></tr>
-      <tr><td>30+ Hz</td><td>Gama</td><td>vysoká pozornosť</td></tr>
-    </table>
-    <p><b>Frekvencia Zeme:</b> Schumannova rezonancia má približne 7,83 Hz. Je príliš nízka na to, aby si ju počul ako tón, ale ako rozdiel medzi ľavým a pravým uchom ju vieš vytvoriť. Spadá do pásma Théta. Nájdeš ju medzi tlačidlami pod názvom „Zem".</p>
-
-    <h3>Tvoj prvý zvuk</h3>
-    <ul>
-      <li>Nasaď si slúchadlá a nastav si príjemnú hlasitosť.</li>
-      <li>Vyber „Dve frekvencie" a pásmo, napríklad Théta na uvoľnenie alebo Beta na sústredenie.</li>
-      <li>Pridaj zvuky prírody, ak chceš.</li>
-      <li>Nechaj hrať 15 až 30 minút. Časovač zastaví prehrávanie sám.</li>
-    </ul>
-
-    <h3>Dýchanie so zvukom</h3>
-    <p>Dych je rytmus, ktorý máš vždy pri sebe. V sekcii „Dýchanie“ je sedem vlastných vzorcov: na stres, hlbokú meditáciu, obyčajné uvoľnenie, energiu, zaspávanie, bdelosť a učenie. Každý má vlastný rytmus nádychu, zadržania a výdychu a vlastné nastavenie tónov. Vedie ťa jemný zvuk vlnenia, ktorý hrá spolu s tvojimi frekvenciami, takže môžeš zavrieť oči a obrazovku aj zamknúť.</p>
-  </section>
-
-
-  <section class="hero" aria-label="Prehrávač">
-    <div class="beat-big"><b id="beatNum">7</b><small>Hz</small></div>
-    <div class="band" id="beatBand">Théta · relax</div>
-    <div class="scale" aria-hidden="true">
-      <div class="segs" id="segs"></div>
-      <div class="marker" id="marker"></div>
-      <div class="seglabels" id="seglabels"></div>
-    </div>
-    <div class="playwrap" id="playwrap" data-on="0">
-      <i class="ring"></i><i class="ring r2"></i>
+  <div class="hero">
+    <div class="stages" id="stages" aria-hidden="true"></div>
+    <div class="bstage"><i class="bcircle" id="bcircle"></i><div class="btxt"><b id="blabel">Pripravené</b><span id="bcount"></span></div></div>
+    <div class="legend" aria-hidden="true"><span><i style="background:#7fd6c2"></i>nádych</span><span><i style="background:#f0b96b"></i>výdych</span><span><i style="background:#e9edf9"></i>zadržanie</span><span><i style="background:#5b6fa8"></i>pauza</span></div>
+    <div id="remain"></div>
+    <div id="attn"></div>
+    <div class="ctrl">
       <button id="play" type="button" data-state="off" aria-label="Spustiť">
         <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>
-        <svg class="i-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>
-        <svg class="i-busy" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10h-2.5A7.5 7.5 0 1 1 12 4.5z"/></svg>
+        <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg>
       </button>
+      <button id="stop" type="button" data-on="0">Ukončiť</button>
     </div>
     <div id="status" role="status" aria-live="polite">Nasaď si slúchadlá. Bez nich sa dva tóny nespoja.</div>
-    <div id="left"></div>
+  </div>
+
+  <section class="card" aria-labelledby="h-hear">
+    <h4 id="h-hear">Čo práve počuješ</h4>
+    <div class="hear" id="hear"></div>
   </section>
 
-
-  <section class="card" aria-labelledby="h-breath" id="breathCard">
-    <h2 id="h-breath">Dýchanie</h2>
-    <p class="note">Vyber, na čo to práve potrebuješ. Aplikácia nastaví tóny, zvuky aj časovač a dych ťa povedie jemný zvuk vlnenia: sýtejší pri nádychu, tichý pri výdychu. Stačí stlačiť Spustiť.</p>
-    <div class="chips" id="bchips" role="group" aria-label="Účel dýchania"></div>
-    <div class="bwrap" id="bwrap" style="display:none">
-      <div class="bstage"><i class="bcircle" id="bcircle"></i><div class="btxt"><b id="blabel">Pripravené</b><span id="bcount"></span></div></div>
-      <div class="blegend" aria-hidden="true"><span><i style="background:#7fd6c2"></i>nádych: tyrkysová, tón stúpa</span><span><i style="background:#f0b96b"></i>výdych: oranžová, tón klesá</span><span><i style="background:#e9edf9"></i>zadržanie: biela, rovný vysoký tón</span><span><i style="background:#5b6fa8"></i>pauza: tmavomodrá, rovný nízky tón</span></div>
-      <p class="note" id="bname" style="text-align:center"></p>
-    </div>
-    <p class="tip" id="bdesc" style="margin:0"></p>
-    <p class="hint" id="bhint"></p>
+  <section class="card" aria-labelledby="h-plan">
+    <h4 id="h-plan">Čo sa bude diať</h4>
+    <ol id="plan"></ol>
+    <p id="how"></p>
   </section>
 
-  <section class="card" aria-labelledby="h-freq">
-    <h2 id="h-freq">Frekvencie</h2>
-    <div class="chips" id="modes" role="group" aria-label="Režim"></div>
-    <div class="freqs" id="freqs">
-      <div class="freq">
-        <label for="fl" id="lblL">Ľavé ucho</label>
-        <div class="stepper"><button type="button" data-step="fl:-1" aria-label="Ľavé ucho o 1 Hz nižšie">−</button><input id="fl" type="text" inputmode="decimal" autocomplete="off"><button type="button" data-step="fl:1" aria-label="Ľavé ucho o 1 Hz vyššie">+</button></div>
-        <div class="unit">Hz</div>
-      </div>
-      <div class="freq" id="freqR">
-        <label for="fr">Pravé ucho</label>
-        <div class="stepper"><button type="button" data-step="fr:-1" aria-label="Pravé ucho o 1 Hz nižšie">−</button><input id="fr" type="text" inputmode="decimal" autocomplete="off"><button type="button" data-step="fr:1" aria-label="Pravé ucho o 1 Hz vyššie">+</button></div>
-        <div class="unit">Hz</div>
-      </div>
-    </div>
-    <div class="chips" id="octaves" style="display:none" role="group" aria-label="Oktáva"></div>
-    <div class="chips" id="presets" role="group" aria-label="Predvoľby"></div>
-    <p class="hint" id="warn"></p>
-    <p class="note" id="eqnote"></p>
-    <p class="note" id="measure"></p>
+  <section class="card" aria-labelledby="h-why">
+    <h4 id="h-why">Prečo takto a čo je za tým overené</h4>
+    <div id="why" style="display:flex;flex-direction:column;gap:10px"></div>
   </section>
 
-  <section class="card" aria-labelledby="h-mix">
-    <h2 id="h-mix">Zvuky</h2>
-    <div id="mix" style="display:flex;flex-direction:column;gap:4px"></div>
-    <p class="note">Zmenu začuješ o chvíľu, zvuk sa musí prepočítať.</p>
+  <section class="card" aria-labelledby="h-edit">
+    <h4 id="h-edit">Upraviť</h4>
+    <div class="row"><div class="l"><label>Dĺžka relácie</label><span>vyber pred spustením</span></div></div>
+    <div class="chips" id="lens" role="group" aria-label="Dĺžka relácie"></div>
+    <div class="row"><div class="l"><label>Vedenie dychu</label><span>čo ti hovorí nádych a výdych</span></div></div>
+    <div class="chips" id="guides" role="group" aria-label="Vedenie dychu"></div>
+    <div id="sliders" style="display:flex;flex-direction:column;gap:8px"></div>
+  </section>
+</section>
+
+<!-- ============ AKO TO FUNGUJE ============ -->
+<section class="screen" id="about">
+  <button class="back" id="backAbout" type="button">← Späť</button>
+  <h2>Čo presne počuješ a ako to funguje</h2>
+  <p class="lead">Väčšina ľudí o tom nevie nič, a je to škoda, lebo to nie je žiadna mágia. Tu je celé na jednom mieste. Pri každom tvrdení vidíš, či je podložené štúdiou, či je to tradícia, alebo je to naša vlastná zostava.</p>
+
+  <section class="card">
+    <h4>Zvuk je kmitanie</h4>
+    <p>Zvuk, ktorý počuješ, je kmitanie vzduchu, ktoré tvoje ucho premení na tón. Počet kmitov za sekundu sa volá frekvencia a meria sa v hertzoch (Hz). Ucho dospelého človeka počuje zhruba od 20 do 20 000 Hz. Mozog vytvára aj vlastné elektrické vlny, ktoré vedci merajú prístrojom EEG. Podľa bežnej konvencie sa delia do pásiem (hranice sa v literatúre mierne líšia): Delta (0,5 až 4 Hz), Théta (4 až 8 Hz), Alfa (8 až 13 Hz), Beta (13 až 30 Hz) a Gama (nad 30 Hz). Použité hranice sú tie, ktoré používa aj táto aplikácia.</p>
   </section>
 
-  <section class="card" aria-labelledby="h-vol">
-    <h2 id="h-vol">Hlasitosť</h2>
-    <div class="row plain" id="rowMaster"></div>
-    <div class="row plain" id="rowBal"></div>
-    <label class="toggle"><span style="margin:0"><b>Vyrovnať hlasitosť uší</b><span>Nízke tóny ucho počuje nerovnako hlasno. Aplikácia ich vyrovná podľa izofónnych kriviek (ISO 226).</span></span><input type="checkbox" id="auto"></label>
-    <p class="note">Tu nastav strop a hlasitosť dolaď tlačidlami na iPhone. Pri vysokej hlasitosti chráň sluch.</p>
+  <section class="card">
+    <h4>Dva tóny, jeden vnem (binaurálny beat)</h4>
+    <p>Do ľavého ucha pošleme jeden tón, napríklad 200 Hz, do pravého trochu iný, napríklad 208 Hz. Vnímaš z nich jemné vlnenie, ktoré v žiadnom z tónov samostatne nie je. Vlní sa 8-krát za sekundu, lebo 208 − 200 = 8. Vznikne len so slúchadlami, lebo každé ucho musí počuť svoj tón samostatne.</p>
+    <p><span class="tag ok">Štúdie</span>Binaurálny beat je opísaný ako percepčný jav, ktorý vzniká, keď sa každému uchu prehrá osobitne trochu iná frekvencia (Garcia-Argibay a kol., 2019).</p>
+    <p><span class="tag ok">Štúdie</span>Súhrnná analýza 22 štúdií (Garcia-Argibay a kol., 2019) našla stredne veľký priaznivý účinok binaurálnych beatov na pozornosť a pamäť, úzkosť a vnímanie bolesti. Účinok ale závisel od použitej frekvencie, dĺžky počúvania a momentu, kedy sa počúvalo.</p>
+    <p><span class="tag ok">Štúdie</span>Systematický prehľad z roku 2026 (hudba a binaurálne beaty u mladých dospelých) uvádza malé až stredné prínosy pri úzkosti, spánku a poznávaní, ale rôznorodosť postupov a malé vzorky obmedzujú istotu. Staršia analýza z roku 2019 hovorila o strednom účinku, tak ber obe čísla opatrne.</p>
+    <p><span class="tag tr">Tradícia</span>Priradenie pásiem k účelom (Delta ku spánku, Théta k meditácii, Alfa k pokoju, Beta k sústredeniu, Gama k bdelosti) je bežné, ale nie je to dokázaný recept. Konkrétne čísla, ktoré používame pri jednotlivých reláciách, sme zvolili podľa tohto zaužívaného priradenia.</p>
   </section>
 
-  <section class="card" aria-labelledby="h-timer">
-    <h2 id="h-timer">Časovač</h2>
-    <div class="chips" id="timers" role="group" aria-label="Časovač vypnutia"></div>
+  <section class="card">
+    <h4>Dýchanie</h4>
+    <p><span class="tag ok">Štúdie</span>Súhrnná analýza 223 štúdií (Laborde a kol., 2022) zistila, že dobrovoľné pomalé dýchanie zvyšuje variabilitu srdcového rytmu (HRV). Vedci ju berú ako ukazovateľ aktivity časti nervového systému, ktorá telo upokojuje. Pomalé dýchanie sa v odbornej literatúre bežne berie ako menej než 10 dychov za minútu.</p>
+    <p><span class="tag ok">Štúdie</span>V randomizovanej štúdii (Balban a kol., 2023) cvičili ľudia 5 minút denne mesiac. Cyklický vzdych (dvojitý nádych a dlhý výdych) zlepšil náladu a spomalil dych v pokoji viac než meditácia všímavosti.</p>
+    <p><span class="tag own">Naše</span>Rytmy v tejto aplikácii (Zostup, Prázdnota, Hojdačka, Úder, Pokles, Horizont, Zaostrenie) sú naše vlastné zostavy poskladané podľa týchto princípov (dlhší výdych, pomalé tempo, pauzy). Samostatnú štúdiu k nim sme nenašli, tak ich ber ako dobre mienený experiment na vlastnom tele.</p>
   </section>
 
-  <details>
-    <summary>Zdroje nahrávok</summary>
+  <section class="card">
+    <h4>Čo robí táto aplikácia</h4>
+    <ol>
+      <li><b>Dych.</b> Kruh sa nafukuje pri nádychu a zmenšuje pri výdychu, aj s odpočtom sekúnd. Okraj kruhu má pri nádychu zelenú farbu, pri výdychu oranžovú, pri zadržaní bielu a pri pauze tmavomodrú. K tomu hrá zvuk, ktorý dych vedie: buď šum vlnenia (pri nádychu sýtejší, pri výdychu tichý), alebo jemný tón (stúpa a klesá). Môžeš ho vypnúť. Pri každej zmene fázy zaznie aj krátky signál: stúpajúci tón znamená nádych, klesajúci výdych a rovný tón zadržanie alebo pauzu, takže by si mal vedieť dych sledovať aj so zavretými očami.</li>
+      <li><b>Tóny do uší.</b> Dva tóny, každý do iného ucha. Rozdiel medzi nimi sa v prvých minútach relácie plynule mení a potom ostáva stály, napríklad pri Poklese z 8 na 2 Hz. V sekcii „Čo práve počuješ“ vidíš presné čísla v danej sekunde.</li>
+      <li><b>Zvuky prírody.</b> Voliteľné pozadie (vtáky, zvonkohra). Pri niektorých reláciách je zapnuté jemne, môžeš ho vypnúť.</li>
+      <li><b>Oblúk relácie.</b> Rozbeh (pár minút na naladenie), jadro a doznievanie. Na konci sa zvuk sám stíši a prehrávanie skončí.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h4>Čo je overené a čo nie</h4>
+    <table>
+      <tr><th>Tvrdenie</th><th>Stav</th></tr>
+      <tr><td>Pomalé dýchanie zvyšuje HRV</td><td>Podložené súhrnnou analýzou štúdií</td></tr>
+      <tr><td>5 minút denne dlhého výdychu zlepšilo náladu viac než meditácia všímavosti</td><td>Jedna randomizovaná štúdia</td></tr>
+      <tr><td>Binaurálne beaty majú stredný účinok na pozornosť a pamäť, úzkosť a vnímanie bolesti</td><td>Súhrnná analýza 22 štúdií (2019, g = 0,45), účinok závisí od nastavenia</td></tr>
+      <tr><td>Binaurálne beaty a hudba majú malé až stredné prínosy pri úzkosti, spánku a poznávaní</td><td>Systematický prehľad (2026), istotu obmedzujú malé a rôzne štúdie</td></tr>
+      <tr><td>Tá-ktorá frekvencia je „na spánok“ alebo „na učenie“</td><td>Tradícia, nie dôkaz</td></tr>
+      <tr><td>Naše presné rytmy (4-8-3, 4-2-6 a ďalšie)</td><td>Vlastná zostava, netestovaná</td></tr>
+      <tr><td>Pocit prepojenia pri Horizonte</td><td>Osobný zážitok, nič sa tým nedokazuje</td></tr>
+    </table>
+  </section>
+
+  <section class="card">
+    <h4>Praktické</h4>
     <ul>
-      <li>Vtáky: „Waidachswald Oberschefflenz Abend“, Wikimedia Commons, CC0</li>
-      <li>Zvonkohra: „Windglockenspiel Koshi“, Wikimedia Commons, CC0</li>
+      <li>Nasaď si slúchadlá. Bez nich sa tóny pre obe uši nespoja.</li>
+      <li>Hlasitosť nastav na príjemnú, nie na hlasnú. Dá sa zvýšiť aj znížiť posuvníkmi v „Upraviť“.</li>
+      <li>Zvuk ide cez prehrávač, takže by mal hrať aj po zamknutí obrazovky. Ako sa to správa na tvojom telefóne, si vyskúšaj, závisí to od zariadenia.</li>
+      <li>Pri Údere sa ti môže zatočiť hlava. Vtedy dýchaj pokojne.</li>
     </ul>
-    <p>Nahrávky sú upravené (filter, hlasitosť, slučka).</p>
-  </details>
+  </section>
+
+  <section class="card src">
+    <h4>Zdroje</h4>
+    <ul>
+      <li>Garcia-Argibay, Santed, Reales (2019): Efficacy of binaural auditory beats in cognition, anxiety, and pain perception: a meta-analysis. Psychological Research. <a href="https://pubmed.ncbi.nlm.nih.gov/30073406/" target="_blank" rel="noopener">PubMed</a></li>
+      <li>Laborde a kol. (2022): Effects of voluntary slow breathing on heart rate and heart rate variability: a systematic review and a meta-analysis. Neuroscience &amp; Biobehavioral Reviews. <a href="https://doi.org/10.1016/j.neubiorev.2022.104711" target="_blank" rel="noopener">DOI</a></li>
+      <li>Balban a kol. (2023): Brief structured respiration practices enhance mood and reduce physiological arousal. Cell Reports Medicine. <a href="https://doi.org/10.1016/j.xcrm.2022.100895" target="_blank" rel="noopener">DOI</a></li>
+      <li>Systematický prehľad (2026): Music and binaural beat interventions for young adults: a systematic review of effects on anxiety, sleep, and cognition. <a href="https://www.cambridge.org/core/product/4282E1152FD3EACA5DF8304935165202" target="_blank" rel="noopener">Cambridge Core</a></li>
+      <li>Pomalé dýchanie ako menej než 10 dychov za minútu: Zaccaro a kol. (2018), Frontiers in Human Neuroscience. <a href="https://doi.org/10.3389/fnhum.2018.00353" target="_blank" rel="noopener">DOI</a></li>
+    </ul>
+  </section>
   <footer class="foot">Lucky Sky LLC</footer>
+</section>
+
 </main>
+<audio id="audio" playsinline></audio>
 
-<audio id="audio" playsinline loop></audio>
+<script id="core">
+// ==CORE-START==
+const TAU = Math.PI * 2;
+const sm = x => x * x * (3 - 2 * x);
+const sumDur = c => c.reduce((a, p) => a + p[1], 0);
+// jeden dych: fázy [názov, trvanie s, plnosť na začiatku 0-1, plnosť na konci, voľné dýchanie]
+function cyc(i, h1, o, h2) {
+  const a = [['Nádych', i, 0, 1]];
+  if (h1) a.push(['Zadrž', h1, 1, 1]);
+  a.push(['Výdych', o, 1, 0]);
+  if (h2) a.push(['Pauza', h2, 0, 0]);
+  return a;
+}
+const times = (n, c) => Array.from({ length: n }, () => c);
+const STAGE = { intro: 'Rozbeh', core: 'Jadro', outro: 'Doznievanie' };
 
-<script id="dsp">
-// ==DSP-START==
-const SR = 22050;           // vzorkovacia frekvencia výstupu
-const LOOP = 240;           // dĺžka slučky v sekundách (zvuky majú dĺžky, ktoré do 240 s vychádzajú na celý počet opakovaní)
-const N = SR * LOOP, TAU = Math.PI * 2, XFADE = 2 * SR, PAD = 2048;
-
-const LAYERS = [
-  { id: 'birds',  label: 'Vtáky',     file: 'audio/birds.mp3',  L: 120, icon: 'M4 14c3-1 5-4 6-7 1 2 3 3 5 3l4 1-4 2c-1 3-4 5-8 4-1 0-2-1-3-3zM17 11l.01 0' },
-  { id: 'chimes', label: 'Zvonkohra', file: 'audio/chimes.mp3', L: 48,  icon: 'M12 3v3M6 8h12M8 8v8M12 8v11M16 8v6' }
-];
-const cache = {}, failed = {};
-
-function toSR(ch, rate) {
-  if (rate === SR) return ch;
-  const n = Math.floor(ch.length * SR / rate), o = new Float32Array(n), r = rate / SR;
-  for (let i = 0; i < n; i++) {
-    const p = i * r, k = Math.floor(p), f = p - k;
-    o[i] = ch[k] * (1 - f) + (k + 1 < ch.length ? ch[k + 1] : ch[k]) * f;
+const SESSIONS = {
+  zostup: {
+    id: 'zostup', name: 'Zostup', purpose: 'Uvoľnenie stresu', blurb: 'Dlhý výdych, ktorý sa postupne predlžuje.', min: 10,
+    intro: times(5, cyc(4, 0, 5, 0)),
+    core: [6, 8, 10, 12, 14, 12, 10, 8].map(x => cyc(4, 0, x, 0)),
+    outro: times(4, cyc(4, 0, 6, 0)),
+    fl: 200, beat: [12, 8], lv: { birds: 0, chimes: 0 },
+    rhythm: 'nádych 4 s, výdych postupne 6 až 14 s a späť',
+    how: 'Nádych nosom, výdych nosom alebo ústami. Dýchaj do brucha, nie do hrude.',
+    why: [
+      ['ok', 'Balban a kol. (2023) testovali cyklický vzdych (dvojitý nádych a dlhý výdych) v randomizovanej štúdii: 5 minút denne počas mesiaca zlepšilo náladu a spomalilo dych v pokoji viac než meditácia všímavosti.'],
+      ['own', 'Zostup je týmto princípom inšpirovaný (dlhý výdych, ktorý sa postupne predlžuje zo 6 na 14 s), ale nie je to to isté cvičenie. Samostatnú štúdiu k nemu sme nenašli.'],
+      ['tr', 'Tóny: rozdiel klesá z 12 na 8 Hz, teda v pásme Alfa. Alfa sa tradične spája s pokojnou bdelosťou.']
+    ]
+  },
+  prazdnota: {
+    id: 'prazdnota', name: 'Prázdnota', purpose: 'Na meditáciu', blurb: 'Tri pomalé dychy za minútu, na odplávanie.', min: 20,
+    intro: times(3, cyc(4, 0, 6, 2)).concat(times(3, cyc(5, 0, 8, 3))),
+    core: [cyc(5, 0, 10, 5)],
+    outro: times(3, cyc(4, 0, 6, 0)),
+    fl: 150, beat: [8, 6], lv: { birds: 0, chimes: 20 },
+    rhythm: 'nádych 5 s, výdych 10 s, pauza naprázdno 5 s',
+    how: 'Nádych nosom, výdych pomaly nosom. V pauze nič nerob, nechaj telo pokojné. Oči zavri.',
+    why: [
+      ['ok', 'Súhrnná analýza 223 štúdií (Laborde a kol., 2022) zistila, že dobrovoľné pomalé dýchanie zvyšuje variabilitu srdcového rytmu (HRV), ktorú autori berú ako ukazovateľ činnosti parasympatiku (vagálne sprostredkovaná HRV). Pomalé dýchanie sa v literatúre berie ako menej než 10 dychov za minútu.'],
+      ['own', 'Tvoje tri dychy za minútu sú ešte pomalšie než tento rozsah. Rytmus 5-10-5 je naša vlastná zostava a samostatnú štúdiu k nemu sme nenašli.'],
+      ['tr', 'Tóny: rozdiel klesá z 8 na 6 Hz, teda z Alfy do Théty. Théta sa tradične spája s meditáciou a driemotom. Zvonkohra je tichá, len ako pozadie.']
+    ]
+  },
+  hojdacka: {
+    id: 'hojdacka', name: 'Hojdačka', purpose: 'Obyčajné uvoľnenie', blurb: 'Jednoduchý rytmus 4 a 6, bez námahy.', min: 10,
+    intro: times(3, cyc(4, 0, 4, 0)),
+    core: [cyc(4, 0, 6, 0)],
+    outro: times(3, cyc(4, 0, 4, 0)),
+    fl: 200, beat: [10, 10], lv: { birds: 20, chimes: 0 },
+    rhythm: 'nádych 4 s, výdych 6 s, bez pauzy',
+    how: 'Nádych nosom, výdych nosom. Nič nerieš, len nasleduj kruh. Ako kývanie sem a tam.',
+    why: [
+      ['ok', 'Súhrnná analýza (Laborde a kol., 2022) zistila, že pomalé dýchanie zvyšuje variabilitu srdcového rytmu. Rytmus 4 a 6 sekúnd je 6 dychov za minútu, teda v rozsahu pomalého dýchania (menej než 10 za minútu).'],
+      ['own', 'Dlhší výdych je inšpirovaný cyklickým vzdychom (Balban a kol., 2023), ale rytmus 4-6 ako takú techniku sme samostatne neoverili.'],
+      ['tr', 'Tóny: stabilných 10 Hz (Alfa), tradične pokojná bdelosť. Vtáky v pozadí sú len jemné.']
+    ]
+  },
+  uder: {
+    id: 'uder', name: 'Úder', purpose: 'Energia a razancia', blurb: 'Rýchle ostré výdychy a napnutie tela, na rozhýbanie.', min: 5,
+    intro: times(5, cyc(3, 0, 3, 0)),
+    core: times(30, [['Nádych', 2, 0, 1], ['Výdych', 1, 1, 0]]).concat([[['Plný nádych', 3, 0, 1], ['Napni telo', 10, 1, 1], ['Voľne dýchaj', 2, 1, 0, true], ['Voľne dýchaj', 18, 0, 0, true]]]),
+    outro: times(4, cyc(4, 0, 6, 0)),
+    fl: 250, beat: [14, 20], lv: { birds: 0, chimes: 0 },
+    rhythm: 'nádych nosom 2 s, ostrý výdych ústami 1 s (30-krát), potom plný nádych, 10 s napnutie tela a 20 s voľné dýchanie',
+    how: 'Výdych je krátky a silný, ako „HA“ so stiahnutím brucha. Pri napnutí zovri päste, stehná, brucho aj čeľusť. Keď sa ti zatočí hlava, dýchaj pokojne.',
+    why: [
+      ['own', 'Toto je naša zostava: krátke ostré výdychy a napnutie tela. Je to opačný smer než pomalé dýchanie: cieľom nie je upokojenie, ale rozhýbanie sa. Tento účinok sme neoverili a samostatnú štúdiu k nemu sme nenašli.'],
+      ['tr', 'Tóny: rozdiel rastie zo 14 na 20 Hz, teda v pásme Beta, ktoré sa tradične spája so sústredením a bdelosťou.']
+    ]
+  },
+  pokles: {
+    id: 'pokles', name: 'Pokles', purpose: 'Na zaspávanie', blurb: 'Pomalý výdych a pauza, v tme a v posteli.', min: 20,
+    intro: times(4, cyc(4, 0, 5, 0)),
+    core: [cyc(4, 0, 8, 3)],
+    outro: times(2, cyc(4, 0, 10, 4)),
+    fl: 150, beat: [8, 2], lv: { birds: 0, chimes: 0 },
+    rhythm: 'nádych 4 s, výdych 8 s, pauza 3 s',
+    how: 'Ľahni si, zavri oči. Pri každom výdychu v duchu odpočítavaj od 20 smerom dole, jedno číslo na dych. Keď dôjdeš k nule, začni znova. Skús, ako ďaleko sa dostaneš.',
+    why: [
+      ['own', 'Dlhý výdych je inšpirovaný cyklickým vzdychom (Balban a kol., 2023), ktorý sa skúmal na náladu a dych v pokoji, nie na spánok. Rytmus 4-8-3 je naša zostava a samostatnú štúdiu k nemu sme nenašli. Odpočítavanie má zamestnať myseľ, nie je to overená technika.'],
+      ['tr', 'Tóny: rozdiel klesá z 8 na 2 Hz, teda z Alfy cez Théta do Delty. Delta sa tradične spája s hlbokým spánkom. Pre spánok sme k tomuto nastaveniu samostatnú štúdiu nenašli.']
+    ]
+  },
+  horizont: {
+    id: 'horizont', name: 'Horizont', purpose: 'Ultra bdelosť', blurb: 'Dvojitý nádych, zadržanie a dlhý výdych s pozornosťou do priestoru.', min: 15,
+    intro: times(4, cyc(4, 0, 6, 0)),
+    core: [[['Nádych', 4, 0, 0.75], ['Ešte nádych', 2, 0.75, 1], ['Zadrž', 6, 1, 1], ['Výdych', 12, 1, 0]]],
+    outro: times(3, cyc(4, 0, 6, 0)),
+    fl: 200, beat: [10, 30], lv: { birds: 0, chimes: 25 },
+    rhythm: 'nádych nosom 4 s a ešte 2 s navrch, zadržanie 6 s, výdych 12 s',
+    how: 'Pozornosť presúvaj každých 5 minút: najprv na telo, potom na miestnosť okolo teba, potom na otvorený priestor nad tebou. Pri zadržaní zostaň uvoľnený, nič netlač.',
+    attn: ['Pozornosť na tele: cíť, ako sa dvíha a klesá.', 'Pozornosť v miestnosti: počuj priestor okolo seba.', 'Pozornosť v otvorenom priestore nad tebou: obloha a ticho.'],
+    why: [
+      ['own', 'Toto je naša zostava: dvojitý nádych, zadržanie, dlhý výdych a presúvanie pozornosti. Samostatnú štúdiu k nej sme nenašli.'],
+      ['tr', 'Tóny: rozdiel rastie z 10 na 30 Hz, teda z Alfy do Gamy, ktorá sa tradične spája s vysokou pozornosťou.'],
+      ['own', 'Pocit prepojenia alebo rozšírenia je osobný zážitok z pozornosti a pomalého dychu. Nič sa tým nedokazuje o svete mimo teba.']
+    ]
+  },
+  zaostrenie: {
+    id: 'zaostrenie', name: 'Zaostrenie', purpose: 'Pred učením', blurb: 'Pokojný rytmus 4-2-6 pred učením.', min: 10,
+    intro: times(4, cyc(4, 0, 4, 0)),
+    core: [cyc(4, 2, 6, 0)],
+    outro: times(2, cyc(4, 0, 6, 0)),
+    fl: 200, beat: [12, 16], lv: { birds: 0, chimes: 0 },
+    rhythm: 'nádych 4 s, zadržanie 2 s, výdych 6 s',
+    how: 'Dávaj si ho 5 až 10 minút pred učením. Počas učenia môžeš každých 10 minút urobiť jeden takýto dych ako reset.',
+    why: [
+      ['own', 'Rytmus 4-2-6 je naša zostava a samostatnú štúdiu k nemu sme nenašli. Ide o pokojný dych s dlhším výdychom.'],
+      ['ok', 'Súhrnná analýza (Garcia-Argibay a kol., 2019) našla stredný účinok binaurálnych beatov na pozornosť a pamäť, ale závisel od frekvencie, dĺžky a momentu počúvania. Nevieme sľúbiť, že práve táto kombinácia ti pomôže.'],
+      ['tr', 'Tóny: rozdiel rastie z 12 na 16 Hz, teda z Alfy do Bety. Beta sa tradične spája so sústredením.']
+    ]
   }
-  return o;
+};
+const ORDER = ['zostup', 'prazdnota', 'hojdacka', 'uder', 'pokles', 'horizont', 'zaostrenie'];
+const LAYERS = [{ id: 'birds', label: 'Vtáky', file: 'audio/birds.mp3', L: 120 }, { id: 'chimes', label: 'Zvonkohra', file: 'audio/chimes.mp3', L: 48 }];
+const LENGTHS = [5, 10, 15, 20, 30, 45, 0];
+
+// ---- časová os: rozbeh, jadro (opakuje sa), doznenie
+function newTimeline(S) {
+  const tl = { phases: [], total: 0, k: 0, finite: true };
+  tl.add = function (cycle, stage) { for (const p of cycle) { tl.phases.push({ label: p[0], dur: p[1], e0: p[2], e1: p[3], free: !!p[4], stage: stage, start: tl.total }); tl.total += p[1]; } };
+  S.intro.forEach(c => tl.add(c, 'intro'));
+  return tl;
 }
-// plynulá slučka: konieckrížovo prelínaný do začiatku (rovnaký výkon)
-function makeLoop(src, len) {
-  len = Math.min(len, src.length);
-  const X = Math.max(0, Math.min(XFADE, src.length - len)), out = new Float32Array(len);
-  for (let i = 0; i < len; i++) out[i] = src[i];
-  for (let i = 0; i < X; i++) {
-    const w = (i / X) * Math.PI / 2;
-    out[i] = src[i] * Math.sin(w) + src[len + i] * Math.cos(w);
+function fillCore(tl, S, until, outroDur) {
+  for (;;) {
+    const c = S.core[tl.k % S.core.length], d = sumDur(c);
+    if (tl.total + d + outroDur > until) break;
+    tl.add(c, 'core'); tl.k++;
   }
-  return out;
 }
-function setLayerPCM(id, a, b, secs) {
-  const l = LAYERS.find(x => x.id === id);
-  cache[id] = { L: makeLoop(a, (secs || l.L) * SR), R: makeLoop(b, (secs || l.L) * SR) };
+function buildTimeline(S, totalSec) {
+  const tl = newTimeline(S);
+  if (totalSec > 0) {
+    const od = S.outro.reduce((a, c) => a + sumDur(c), 0);
+    fillCore(tl, S, totalSec, od);
+    S.outro.forEach(c => tl.add(c, 'outro'));
+  } else { tl.finite = false; fillCore(tl, S, 3600, 0); }
+  return tl;
 }
-async function loadLayer(l) {
-  const resp = await fetch(l.file);
-  if (!resp.ok) throw new Error('HTTP ' + resp.status);
-  const buf = await resp.arrayBuffer();
-  const Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-  const ctx = new Ctx(2, SR, SR);
-  const ab = await new Promise((res, rej) => { const p = ctx.decodeAudioData(buf, res, rej); if (p && p.then) p.then(res, rej); });
-  const c0 = ab.getChannelData(0), c1 = ab.numberOfChannels > 1 ? ab.getChannelData(1) : c0;
-  setLayerPCM(l.id, toSR(c0.subarray(PAD), ab.sampleRate), toSR(c1.subarray(PAD), ab.sampleRate));
+function extendTimeline(tl, S, sec) { fillCore(tl, S, tl.total + sec, 0); }
+const EXT_AHEAD = 1500, EXT_CHUNK = 1800;
+function planOf(S, totalSec) {   // trvania úsekov na zobrazenie
+  const tl = buildTimeline(S, totalSec), d = { intro: 0, core: 0, outro: 0 };
+  tl.phases.forEach(p => { d[p.stage] += p.dur; });
+  return d;
 }
 
-// --- vyrovnanie hlasitosti uší podľa ISO 226:2003 (kontúra 40 fónov)
+// ---- vyrovnanie hlasitosti uší podľa ISO 226:2003 (kontúra 40 fónov)
 const ISO = {
   f:  [20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500],
   af: [0.532, 0.506, 0.480, 0.455, 0.432, 0.409, 0.387, 0.367, 0.349, 0.330, 0.315, 0.301, 0.288, 0.276, 0.267, 0.259, 0.253, 0.250, 0.246, 0.244, 0.243, 0.243, 0.243, 0.242, 0.242, 0.245, 0.254, 0.271, 0.301],
@@ -331,170 +398,164 @@ function isoLp(f) {
   const Af = 4.47e-3 * (Math.pow(10, 0.025 * 40) - 1.15) + Math.pow(0.4 * Math.pow(10, (Tf + Lu) / 10 - 9), af);
   return (10 / af) * Math.log10(Af) - Lu + 94;
 }
-// vráti zosilnenia [ľavé, pravé] s maximom 1; bal v dB (kladné = viac napravo)
-function earGains(fl, fr, auto, bal) {
+function earGains(fl, fr) {
   let gl = 1, gr = 1;
-  if (auto) {
-    const d = Math.max(-20, Math.min(20, isoLp(fl) - isoLp(fr)));   // kladné: ľavý tón je pre ucho slabší, potrebuje viac
-    if (d >= 0) gr = Math.pow(10, -d / 20); else gl = Math.pow(10, d / 20);
-  }
-  const h = Math.pow(10, bal / 40); gl /= h; gr *= h;
+  const d = Math.max(-20, Math.min(20, isoLp(fl) - isoLp(fr)));
+  if (d >= 0) gr = Math.pow(10, -d / 20); else gl = Math.pow(10, d / 20);
   const m = Math.max(gl, gr); return [gl / m, gr / m];
 }
 
-
-// --- dychové vzorce: každá jednotka sa v slučke 240 s opakuje celý počet krát; e = „plnosť nádychu“ 0 až 1
-const sm = x => x * x * (3 - 2 * x);
-function cyc(i, h1, o, h2) {
-  const a = [['Nádych', i, 0, 1]];
-  if (h1) a.push(['Zadrž', h1, 1, 1]);
-  a.push(['Výdych', o, 1, 0]);
-  if (h2) a.push(['Pauza', h2, 0, 0]);
-  return a;
-}
-function mkPattern(arr) {
-  let s = 0;
-  const segs = arr.map(a => { const o = { label: a[0], dur: a[1], e0: a[2], e1: a[3], free: !!a[4], start: s }; s += a[1]; return o; });
-  return { segs: segs, total: s };
-}
-const BREATH = {
-  zostup: mkPattern([].concat(...[6, 8, 10, 12, 14, 12, 10, 8].map(x => cyc(4, 0, x, 0)), cyc(4, 0, 4, 0))),
-  prazdnota: mkPattern(cyc(5, 0, 10, 5)),
-  hojdacka: mkPattern(cyc(4, 0, 6, 0)),
-  uder: mkPattern([].concat(...Array.from({ length: 30 }, () => [['Nádych', 2, 0, 1], ['Výdych', 1, 1, 0]]), [['Napni telo', 10, 1, 1], ['Voľne dýchaj', 20, 0, 0, true]])),
-  pokles: mkPattern(cyc(4, 0, 8, 3)),
-  horizont: mkPattern([['Nádych', 4, 0, 0.75], ['Ešte nádych', 2, 0.75, 1], ['Zadrž', 6, 1, 1], ['Výdych', 12, 1, 0]]),
-  zaostrenie: mkPattern(cyc(4, 2, 6, 0))
-};
-const bcache = { k: '', a: null };
-// zvuk vedenia dychu: šum, ktorý je pri nádychu hlasnejší a jasnejší a pri výdychu sa vytráca
-function breathLayer(id, NN) {
-  const k = id + ':' + NN;
-  if (bcache.k === k && bcache.a) return bcache.a;
-  const P = BREATH[id], segs = P.segs, U = Math.round(P.total * SR), out = new Float32Array(NN);
-  let seed = 2463534242, y1 = 0, y2 = 0, pk = 1e-9, idx = 0;
-  for (let i = 0; i < NN; i++) {
-    const r = i % U, t = r / SR;
-    if (r === 0) idx = 0;
-    while (idx + 1 < segs.length && t >= segs[idx + 1].start) idx++;
-    const sg = segs[idx], e = sg.e0 + (sg.e1 - sg.e0) * sm(Math.min(1, (t - sg.start) / sg.dur));
-    seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
-    const w = (seed >>> 0) / 2147483648 - 1, a = 0.012 + 0.28 * e;
-    y1 += a * (w - y1); y2 += a * (y1 - y2);
-    const v = y2 * e; out[i] = v; const av = v < 0 ? -v : v; if (av > pk) pk = av;
+// ---- zvukový engine v reálnom čase (funguje s AudioContext aj OfflineAudioContext)
+class Engine {
+  constructor(ctx, dest, S, o) { this.ctx = ctx; this.dest = dest; this.S = S; this.o = o; this.layers = {}; this.stopped = false; }
+  start() {
+    const c = this.ctx, S = this.S, o = this.o, tS = c.currentTime + 0.05, t0 = this.t0 = tS + 2.7;
+    const tl = this.tl = buildTimeline(S, o.total);
+    this.finite = tl.finite;
+    this.ramp = tl.finite ? Math.min(300, 0.4 * tl.total) : 300;
+    const master = this.master = c.createGain();
+    master.gain.setValueAtTime(0, tS); master.gain.linearRampToValueAtTime(0.8, tS + 2.5);
+    const comp = c.createDynamicsCompressor();
+    comp.threshold.value = -8; comp.knee.value = 10; comp.ratio.value = 8; comp.attack.value = 0.01; comp.release.value = 0.25;
+    master.connect(comp); comp.connect(this.dest);
+    this.srcs = [];
+    // tóny
+    const fl = S.fl, b0 = S.beat[0], b1 = S.beat[1], eg = earGains(fl, fl + b1);
+    const oL = c.createOscillator(), oR = c.createOscillator();
+    oL.frequency.value = fl;
+    oR.frequency.setValueAtTime(fl + b0, tS); oR.frequency.setValueAtTime(fl + b0, t0);
+    oR.frequency.linearRampToValueAtTime(fl + b1, t0 + this.ramp);
+    const gL = c.createGain(), gR = c.createGain(); gL.gain.value = 0.3 * eg[0]; gR.gain.value = 0.3 * eg[1];
+    const mg = c.createChannelMerger(2);
+    oL.connect(gL); gL.connect(mg, 0, 0); oR.connect(gR); gR.connect(mg, 0, 1);
+    const toneGain = this.toneGain = c.createGain(); toneGain.gain.value = o.toneLv / 100;
+    mg.connect(toneGain); toneGain.connect(master);
+    oL.start(tS); oR.start(tS); this.srcs.push(oL, oR);
+    // vedenie dychu: šum (vlnenie) a tón
+    const nb = c.createBuffer(1, Math.round(c.sampleRate * 3), c.sampleRate), nd = nb.getChannelData(0);
+    let seed = 2463534242;
+    for (let i = 0; i < nd.length; i++) { seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5; nd[i] = (seed >>> 0) / 2147483648 - 1; }
+    const ns = c.createBufferSource(); ns.buffer = nb; ns.loop = true;
+    const lp = this.lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 0.5; lp.frequency.value = 150;
+    const wEnv = this.wEnv = c.createGain(); wEnv.gain.value = 0;
+    const wSel = this.wSel = c.createGain();
+    const go = this.gosc = c.createOscillator(); go.frequency.value = 2 * fl;
+    const tEnv = this.tEnv = c.createGain(); tEnv.gain.value = 0;
+    const tSel = this.tSel = c.createGain();
+    const gl = this.guideLvl = c.createGain(); gl.gain.value = o.breathLv / 100;
+    ns.connect(lp); lp.connect(wEnv); wEnv.connect(wSel); wSel.connect(gl);
+    go.connect(tEnv); tEnv.connect(tSel); tSel.connect(gl); gl.connect(master);
+    ns.start(tS); go.start(tS); this.srcs.push(ns, go);
+    // signály zmeny fázy: stúpajúci tón = nádych, klesajúci = výdych, rovný tón = zadržanie alebo pauza
+    const mo = this.mosc = c.createOscillator(); mo.frequency.value = 440;
+    const mEnv = this.mEnv = c.createGain(); mEnv.gain.value = 0;
+    const ml = this.markLvl = c.createGain(); ml.gain.value = (o.markLv == null ? 60 : o.markLv) / 100;
+    mo.connect(mEnv); mEnv.connect(ml); ml.connect(master); mo.start(tS); this.srcs.push(mo);
+    this.scheduleMarks(0);
+    this.setGuide(o.guide, true);
+    // zvuky prírody
+    LAYERS.forEach(l => { if (o.bufs && o.bufs[l.id]) this.addLayer(l.id, o.bufs[l.id]); });
+    // koniec
+    if (this.finite) {
+      const tEnd = t0 + tl.total;
+      master.gain.setValueAtTime(0.8, tEnd); master.gain.linearRampToValueAtTime(0, tEnd + 6);
+      this.tEnd = tEnd + 6.5;
+      this.srcs.forEach(s => { try { s.stop(this.tEnd); } catch (e) {} });
+    }
+    return this;
   }
-  let ss = 0; for (let i = 0; i < NN; i += 3) ss += out[i] * out[i];
-  const g = 0.38 / Math.sqrt(ss / Math.ceil(NN / 3));   // cieľová efektívna hodnota; veľké špičky ohraničí limiter na konci
-  for (let i = 0; i < NN; i++) out[i] *= g;
-  bcache.k = k; bcache.a = out;
-  return out;
-}
-
-const mcache = { k: '', a: null };
-// signály zmeny fázy: stúpajúci tón = nádych, klesajúci = výdych, rovný vysoký = zadržanie, rovný nízky = pauza
-function markLayer(id, NN) {
-  const k = id + ':' + NN;
-  if (mcache.k === k && mcache.a) return mcache.a;
-  const P = BREATH[id], U = Math.round(P.total * SR), out = new Float32Array(NN);
-  for (let u0 = 0; u0 < NN; u0 += U) {
-    for (const sg of P.segs) {
-      if (sg.free) continue;
-      const s0 = u0 + Math.round(sg.start * SR), d = Math.min(0.8, sg.dur * 0.6), n = Math.round(d * SR);
-      let f0, f1;
-      if (sg.e1 > sg.e0 + 1e-6) { f0 = 392; f1 = 523; } else if (sg.e1 < sg.e0 - 1e-6) { f0 = 523; f1 = 392; } else if (sg.e0 > 0.5) { f0 = f1 = 523; } else { f0 = f1 = 330; }
-      let ph = 0;
-      for (let j = 0; j < n && s0 + j < NN; j++) {
-        const x = j / n, f = f0 + (f1 - f0) * x, env = Math.min(1, j / (0.03 * SR)) * (1 - x);
-        ph += TAU * f / SR; out[s0 + j] += 2.0 * env * (Math.sin(ph) + 0.35 * Math.sin(2 * ph));
+  addLayer(id, buf) {
+    if (this.layers[id] || this.stopped) return;
+    const c = this.ctx, s = c.createBufferSource(); s.buffer = buf; s.loop = true;
+    const g = c.createGain(); g.gain.value = 0; g.gain.setTargetAtTime(((this.o.lv && this.o.lv[id]) || 0) / 100 * 0.6, c.currentTime, 0.15);
+    s.connect(g); g.connect(this.master); s.start(Math.max(c.currentTime, this.t0));
+    if (this.finite) { try { s.stop(this.tEnd); } catch (e) {} }
+    this.layers[id] = { s: s, g: g }; this.srcs.push(s);
+  }
+  setLayerLevel(id, v) { this.o.lv[id] = v; const l = this.layers[id]; if (l) l.g.gain.setTargetAtTime(v / 100 * 0.6, this.ctx.currentTime, 0.1); }
+  setTone(v) { this.o.toneLv = v; this.toneGain.gain.setTargetAtTime(v / 100, this.ctx.currentTime, 0.05); }
+  setBreath(v) { this.o.breathLv = v; this.guideLvl.gain.setTargetAtTime(v / 100, this.ctx.currentTime, 0.05); }
+  setGuide(g, init) {
+    this.o.guide = g;
+    const wv = g === 'wave' ? 1 : 0, tv = g === 'tone' ? 1 : 0;
+    if (init) { this.wSel.gain.value = wv; this.tSel.gain.value = tv; }
+    else { const n = this.ctx.currentTime; this.wSel.gain.setTargetAtTime(wv, n, 0.03); this.tSel.gain.setTargetAtTime(tv, n, 0.03); }
+    this.scheduleGuide(init ? 0 : this.ctx.currentTime);
+  }
+  eAt(rel) {   // plnosť nádychu v čase rel (s od začiatku relácie)
+    const ph = this.phaseAt(rel);
+    if (!ph) return 0;
+    if (rel <= 0) return 0;
+    return ph.e0 + (ph.e1 - ph.e0) * sm(Math.min(1, (rel - ph.start) / ph.dur));
+  }
+  phaseAt(rel) {
+    const P = this.tl.phases; if (rel < 0 || !P.length) return P[0] || null;
+    let lo = 0, hi = P.length - 1;
+    if (rel >= this.tl.total) return null;
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (P[mid].start <= rel) lo = mid; else hi = mid - 1; }
+    return P[lo];
+  }
+  beatAt(rel) { const b = this.S.beat, x = Math.min(1, Math.max(0, rel / this.ramp)); return b[0] + (b[1] - b[0]) * x; }
+  scheduleGuide(fromT) {
+    const c = this.ctx, t0 = this.t0, now = Math.max(fromT || 0, c.currentTime) + 0.02, fl = this.S.fl;
+    const all = [this.wEnv.gain, this.lp.frequency, this.tEnv.gain, this.gosc.frequency];
+    all.forEach(p => p.cancelScheduledValues(now));
+    const act = [];
+    if (this.o.guide === 'wave') act.push([this.wEnv.gain, e => e * 0.8], [this.lp.frequency, e => 150 + 1250 * e]);
+    else if (this.o.guide === 'tone') act.push([this.tEnv.gain, e => e * 0.25], [this.gosc.frequency, e => 2 * fl * (1 + 0.1 * e)]);
+    else { this.wEnv.gain.setValueAtTime(0, now); this.tEnv.gain.setValueAtTime(0, now); return; }
+    const eNow = this.eAt(now - t0);
+    act.forEach(([p, f]) => p.setValueAtTime(f(eNow), now));
+    act.forEach(([p, f]) => p.setValueAtTime(f(0), Math.max(now, t0)));
+    {
+      for (const ph of this.tl.phases) {
+        const a = t0 + ph.start, b = a + ph.dur;
+        if (b <= now) continue;
+        if (Math.abs(ph.e1 - ph.e0) < 1e-6) { act.forEach(([p, f]) => p.setValueAtTime(f(ph.e0), Math.max(a, now))); continue; }
+        const x0 = Math.max(0, (now - a) / ph.dur), n = Math.max(2, Math.min(12, Math.round(ph.dur * 3))), steps = Math.max(1, Math.ceil(n * (1 - x0)));
+        for (let i = 1; i <= steps; i++) {
+          const x = x0 + (1 - x0) * i / steps, e = ph.e0 + (ph.e1 - ph.e0) * sm(x);
+          act.forEach(([p, f]) => p.linearRampToValueAtTime(f(e), a + x * ph.dur));
+        }
       }
     }
   }
-  mcache.k = k; mcache.a = out;
-  return out;
-}
-
-// p = { fl, fr, tone 0-100, master 0-100, bal dB, auto, lv:{id:0-100} }; vráti prekladaný Int16 (L,R,L,R...)
-function buildPcm(p) {
-  const act = [];
-  for (const l of LAYERS) {
-    const g = (p.lv[l.id] || 0) / 100, c = cache[l.id];
-    if (g > 0 && c) act.push({ g, L: c.L, R: c.R, n: c.L.length });
-  }
-  if (p.breath && BREATH[p.breath] && (p.breathLv || 0) > 0) {
-    const b = breathLayer(p.breath, p.len || N);
-    act.push({ g: p.breathLv / 100, L: b, R: b, n: b.length });
-  } else { bcache.k = ''; bcache.a = null; }
-  if (p.breath && BREATH[p.breath] && (p.markLv || 0) > 0) {
-    const m = markLayer(p.breath, p.len || N);
-    act.push({ g: p.markLv / 100, L: m, R: m, n: m.length });
-  } else { mcache.k = ''; mcache.a = null; }
-  const NN = p.len || N;
-  const [eL, eR] = earGains(p.fl, p.fr, p.auto, p.bal);
-  const gT = p.tone / 100, aL = gT * eL, aR = gT * eR;
-  const wl = TAU * p.fl / SR, wr = TAU * p.fr / SR;
-  // 1. prechod: odhad úrovne (99,99. percentil)
-  const BINS = 4096, RANGE = 4, hist = new Uint32Array(BINS); let cnt = 0;
-  for (let i = 0; i < NN; i += 7) {
-    let l = aL * Math.sin(wl * i), r = aR * Math.sin(wr * i);
-    for (let k = 0; k < act.length; k++) { const a = act[k], j = i % a.n; l += a.g * a.L[j]; r += a.g * a.R[j]; }
-    hist[Math.min(BINS - 1, (Math.abs(l) / RANGE * BINS) | 0)]++;
-    hist[Math.min(BINS - 1, (Math.abs(r) / RANGE * BINS) | 0)]++;
-    cnt += 2;
-  }
-  let acc = 0, pk = RANGE / BINS; const top = Math.max(1, Math.floor(cnt * 0.0001));
-  for (let b = BINS - 1; b >= 0; b--) { acc += hist[b]; if (acc >= top) { pk = (b + 1) / BINS * RANGE; break; } }
-  const sc = 0.9 * (p.master / 100) / pk;
-  // 2. prechod: zápis
-  const out = new Int16Array(NN * 2), na = act.length, ix = new Int32Array(na);
-  const cl = Math.cos(wl), sl = Math.sin(wl), cr = Math.cos(wr), sr = Math.sin(wr);
-  let ccl = 1, ssl = 0, ccr = 1, ssr = 0;
-  for (let i = 0; i < NN; i++) {
-    let l = aL * ssl, r = aR * ssr;
-    for (let k = 0; k < na; k++) {
-      const a = act[k], j = ix[k];
-      l += a.g * a.L[j]; r += a.g * a.R[j];
-      ix[k] = j + 1 === a.n ? 0 : j + 1;
+  scheduleMarks(fromT) {
+    const c = this.ctx, t0 = this.t0, now = Math.max(fromT || 0, c.currentTime) + 0.02, F = this.mosc.frequency, G = this.mEnv.gain, PK = 0.32;
+    F.cancelScheduledValues(now); G.cancelScheduledValues(now); if (fromT) G.linearRampToValueAtTime(0, now + 0.005); else G.setValueAtTime(0, now);
+    for (const ph of this.tl.phases) {
+      const a = t0 + ph.start;
+      if (a < now || ph.free) continue;
+      const d = Math.min(0.5, ph.dur * 0.5);
+      let f0, f1;
+      if (ph.e1 > ph.e0 + 1e-6) { f0 = 392; f1 = 523; }          // nádych: stúpa
+      else if (ph.e1 < ph.e0 - 1e-6) { f0 = 523; f1 = 392; }     // výdych: klesá
+      else if (ph.e0 > 0.5) { f0 = f1 = 523; }                   // zadržanie s plnými pľúcami
+      else { f0 = f1 = 330; }                                    // pauza naprázdno
+      F.setValueAtTime(f0, a); if (f1 !== f0) F.linearRampToValueAtTime(f1, a + d);
+      G.setValueAtTime(0, a); G.linearRampToValueAtTime(PK, a + 0.03); G.linearRampToValueAtTime(0, a + d);
     }
-    let t = ccl * cl - ssl * sl; ssl = ssl * cl + ccl * sl; ccl = t;
-    t = ccr * cr - ssr * sr; ssr = ssr * cr + ccr * sr; ccr = t;
-    l *= sc; r *= sc;
-    let a = l < 0 ? -l : l; if (a > 0.9) { a = 0.9 + 0.09 * Math.tanh((a - 0.9) / 0.09); l = l < 0 ? -a : a; }
-    a = r < 0 ? -r : r; if (a > 0.9) { a = 0.9 + 0.09 * Math.tanh((a - 0.9) / 0.09); r = r < 0 ? -a : a; }
-    out[2 * i] = Math.round(l * 32767); out[2 * i + 1] = Math.round(r * 32767);
   }
-  return out;
+  setMarks(v) { this.o.markLv = v; this.markLvl.gain.setTargetAtTime(v / 100, this.ctx.currentTime, 0.05); }
+  extend() { extendTimeline(this.tl, this.S, EXT_CHUNK); this.scheduleGuide(this.ctx.currentTime); this.scheduleMarks(this.ctx.currentTime); }
+  stop() {
+    if (this.stopped) return; this.stopped = true;
+    const c = this.ctx, now = c.currentTime;
+    try { const g = this.master.gain; if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(now); else g.cancelScheduledValues(now); g.setTargetAtTime(0, now, 0.1); } catch (e) {}
+    this.srcs.forEach(s => { try { s.stop(now + 0.8); } catch (e) {} });
+    setTimeout(() => { try { this.master.disconnect(); } catch (e) {} }, 1000);
+  }
 }
-function wavBlob(pcm) {
-  const buf = new ArrayBuffer(44 + pcm.length * 2), dv = new DataView(buf);
-  const w = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
-  w(0, 'RIFF'); dv.setUint32(4, 36 + pcm.length * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
-  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 2, true);
-  dv.setUint32(24, SR, true); dv.setUint32(28, SR * 4, true); dv.setUint16(32, 4, true); dv.setUint16(34, 16, true);
-  w(36, 'data'); dv.setUint32(40, pcm.length * 2, true);
-  new Int16Array(buf, 44).set(pcm);
-  return new Blob([buf], { type: 'audio/wav' });
-}
-// meranie frekvencie vygenerovaného tónu (Goertzel + parabolická interpolácia), samotný tón bez zvukov
-function goertzel(x, f) {
-  const c = 2 * Math.cos(TAU * f / SR); let s1 = 0, s2 = 0;
-  for (let i = 0; i < x.length; i++) { const s0 = x[i] + c * s1 - s2; s2 = s1; s1 = s0; }
-  return s1 * s1 + s2 * s2 - c * s1 * s2;
-}
-function measureTone(p) {
-  const len = 4 * SR, pcm = buildPcm(Object.assign({}, p, { lv: {}, breath: '', len: len, master: 100, tone: 100 })), res = [];
+function makeLoopBuf(ctx, ab, secs) {   // plynulá slučka prelínaná do začiatku (rovnaký výkon)
+  const rate = ab.sampleRate, PAD = 2048, X = 2 * rate, len = Math.min(Math.round(secs * rate), ab.length - PAD), nb = ctx.createBuffer(2, len, rate);
   for (let ch = 0; ch < 2; ch++) {
-    const x = new Float32Array(len), f0 = ch === 0 ? p.fl : p.fr;
-    for (let i = 0; i < len; i++) x[i] = pcm[2 * i + ch] / 32768 * (0.5 - 0.5 * Math.cos(TAU * i / len));
-    let best = f0, bp = -1;
-    for (let d = -2; d <= 2.0001; d += 0.25) { const f = f0 + d; if (f <= 1) continue; const pw = goertzel(x, f); if (pw > bp) { bp = pw; best = f; } }
-    let b2 = best, bp2 = -1;
-    for (let d = -0.3; d <= 0.3001; d += 0.01) { const f = best + d; const pw = goertzel(x, f); if (pw > bp2) { bp2 = pw; b2 = f; } }
-    const a = Math.sqrt(goertzel(x, b2 - 0.01)), b = Math.sqrt(goertzel(x, b2)), c = Math.sqrt(goertzel(x, b2 + 0.01));
-    const den = a - 2 * b + c; res.push(b2 + (Math.abs(den) > 1e-12 ? 0.01 * 0.5 * (a - c) / den : 0));
+    const src = ab.getChannelData(Math.min(ch, ab.numberOfChannels - 1)).subarray(PAD), out = nb.getChannelData(ch), Xe = Math.max(0, Math.min(X, src.length - len));
+    for (let i = 0; i < len; i++) out[i] = src[i];
+    for (let i = 0; i < Xe; i++) { const w = (i / Xe) * Math.PI / 2; out[i] = src[i] * Math.sin(w) + src[len + i] * Math.cos(w); }
   }
-  return res;
+  return nb;
 }
-// ==DSP-END==
+// ==CORE-END==
 </script>
 
 <script id="ui">
@@ -502,364 +563,200 @@ function measureTone(p) {
   'use strict';
   const $ = id => document.getElementById(id);
   const audio = $('audio');
-  const KEY = 'beaty-v4';
-  const defaults = { mode: 'bin', fl: 200, fr: 210, tone: 60, master: 80, bal: 0, auto: true, gapless: true, timer: 0, lv: { birds: 0, chimes: 0 }, breath: '', breathLv: 70, markLv: 85 };
-  let st = JSON.parse(JSON.stringify(defaults));
-  try {
-    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (saved && typeof saved === 'object') st = Object.assign(st, saved, { lv: Object.assign({}, defaults.lv, saved.lv || {}) });
-  } catch (e) {}
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+  const KEY = 'stastie2';
+  let st = { toneLv: 70, breathLv: 70, markLv: 60, guide: 'wave', min: {}, lv: {} };
+  try { const sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && typeof sv === 'object') st = Object.assign(st, sv, { min: Object.assign({}, sv.min || {}), lv: Object.assign({}, sv.lv || {}) }); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const fmt = v => String(Math.round(v * 10) / 10).replace('.', ',');
+  const bandOf = b => b < 4 ? 'Delta' : b < 8 ? 'Théta' : b < 13 ? 'Alfa' : b < 30 ? 'Beta' : 'Gama';
+  const mmss = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 
-  const r1 = v => Math.round(v * 10) / 10;
-  const clampF = v => Math.min(st.mode === 'mono' ? 10000 : 1500, Math.max(20, r1(v)));
-  const fmt = v => String(r1(v)).replace('.', ',');
-  const parseF = s => { const v = parseFloat(String(s).replace(',', '.')); return isFinite(v) ? v : NaN; };
+  let cur = null, engine = null, actx = null, dest = null, playing = false, paused = false, raf = 0, bufs = {}, loading = {}, finishedFlag = false;
+  const minOf = S => (S.id in st.min) ? st.min[S.id] : S.min;
+  const lvOf = (S, id) => (S.id in st.lv && id in st.lv[S.id]) ? st.lv[S.id][id] : S.lv[id];
 
-  // --- pásma a stupnica beatu
-  const BANDS = [['Delta', 0.5, 4], ['Théta', 4, 8], ['Alfa', 8, 13], ['Beta', 13, 30], ['Gama', 30, 40]];
-  const LO = 0.5, HI = 40, SPAN = Math.log(HI / LO);
-  const segs = $('segs'), labs = $('seglabels');
-  BANDS.forEach(b => {
-    const w = Math.log(b[2] / b[1]) / SPAN * 100;
-    const s = document.createElement('div'); s.className = 'seg'; s.style.flex = w + ' 1 0'; s.dataset.name = b[0]; segs.appendChild(s);
-    const l = document.createElement('span'); l.style.flex = w + ' 1 0'; l.textContent = b[0]; labs.appendChild(l);
+  // ---------- navigácia
+  function show(id) { document.querySelectorAll('.screen').forEach(s => s.dataset.on = s.id === id ? '1' : '0'); window.scrollTo(0, 0); }
+  function lenLabel(m) { return m === 0 ? '∞' : m + ' min'; }
+  // domov
+  const list = $('list');
+  ORDER.forEach(id => {
+    const S = SESSIONS[id], b = document.createElement('button');
+    b.type = 'button'; b.className = 'sess';
+    b.innerHTML = '<span class="n"></span><span class="p"></span><span class="b"></span><span class="m"></span>';
+    b.querySelector('.n').textContent = S.name; b.querySelector('.p').textContent = S.purpose; b.querySelector('.b').textContent = S.blurb; b.querySelector('.m').textContent = lenLabel(S.min);
+    b.addEventListener('click', () => openSession(id)); list.appendChild(b);
   });
-  const PURPOSE = { Delta: 'spánok', 'Théta': 'relax, meditácia', Alfa: 'pokoj', Beta: 'sústredenie', Gama: 'bdelosť' };
-  function bandOf(b) { for (const x of BANDS) if (b < x[2]) return x[0]; return 'Gama'; }
-  const PRESETS = [['Delta', 2], ['Théta', 6], ['Zem', 7.8], ['Alfa', 10], ['Beta', 18], ['Gama', 35]];
+  $('goAbout').addEventListener('click', () => show('about'));
+  $('backAbout').addEventListener('click', () => show(cur ? 'sess' : 'home'));
+  $('back').addEventListener('click', () => { if (playing || paused) endSession(); cur = null; show('home'); });
 
-  // --- frekvencie
-  const fl = $('fl'), fr = $('fr');
-  const effR = () => st.mode === 'mono' ? st.fl : st.fr;
-  const pcmParams = () => Object.assign({}, st, { fr: effR() });
-  const fmt2 = v => v.toFixed(2).replace('.', ',');
-  let measT = 0;
-  function scheduleMeasure() {
-    clearTimeout(measT);
-    measT = setTimeout(() => {
-      try {
-        const m = measureTone(pcmParams());
-        $('measure').textContent = 'Zmerané v generovanom signáli: ľavé ' + fmt2(m[0]) + ' Hz, pravé ' + fmt2(m[1]) + ' Hz (meranie samotného tónu, bez zvukov prírody).';
-      } catch (e) { $('measure').textContent = ''; }
-    }, 350);
+  // ---------- obrazovka relácie
+  const stagesBox = $('stages');
+  ['intro', 'core', 'outro'].forEach(k => { const d = document.createElement('div'); d.className = 'stg'; d.dataset.k = k; d.textContent = STAGE[k]; stagesBox.appendChild(d); });
+
+  function openSession(id) {
+    if (engine) endSession();
+    cur = SESSIONS[id]; finishedFlag = false;
+    $('sName').textContent = cur.name + ' · ' + cur.purpose;
+    $('sBlurb').textContent = cur.blurb;
+    renderPlan(); renderWhy(); renderEdit(); renderHear(); drawIdle(); setBtn(); $('status').textContent = 'Nasaď si slúchadlá. Bez nich sa dva tóny nespoja.';
+    show('sess');
   }
-  function renderFreq() {
-    const mono = st.mode === 'mono', R = effR();
-    fl.value = fmt(st.fl); fr.value = fmt(st.fr);
-    $('freqR').style.display = mono ? 'none' : '';
-    $('freqs').style.gridTemplateColumns = mono ? '1fr' : '1fr 1fr';
-    $('lblL').textContent = mono ? 'Frekvencia' : 'Ľavé ucho';
-    $('octaves').style.display = mono ? '' : 'none';
-    document.querySelector('.scale').style.display = mono ? 'none' : '';
-    document.querySelectorAll('#modes .chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.mode === st.mode)));
-    const b = Math.abs(R - st.fl);
-    if (mono) {
-      $('beatNum').textContent = fmt(st.fl);
-      $('beatBand').textContent = 'čistý tón · rovnaký v oboch ušiach';
-    } else {
-      $('beatNum').textContent = fmt(b);
-      const nm = b < 0.05 ? null : bandOf(b);
-      $('beatBand').textContent = nm ? nm + ' · ' + PURPOSE[nm] : 'rovnaké tóny, beat nevznikne';
-      segs.childNodes.forEach(s => s.dataset.on = nm && s.dataset.name === nm ? '1' : '0');
-      const pos = Math.min(1, Math.max(0, Math.log(Math.max(b, LO) / LO) / SPAN));
-      $('marker').style.left = (pos * 100) + '%';
-    }
-    document.querySelectorAll('#presets .chip').forEach(c => {
-      const on = mono ? Math.abs(parseFloat(c.dataset.f) - st.fl) < 0.05 : Math.abs(parseFloat(c.dataset.b) - b) < 0.05;
-      c.setAttribute('aria-pressed', String(on));
-    });
-    const w = [];
-    if (!mono) {
-    }
-    $('warn').textContent = w.join(' ');
-    const g = earGains(st.fl, R, st.auto, st.bal), d = 20 * Math.log10(g[0] / g[1]);
-    $('eqnote').textContent = !mono && Math.abs(d) >= 1 ? 'Vyrovnanie uší: ' + (d < 0 ? 'ľavé' : 'pravé') + ' ucho je ' + fmt(Math.abs(d)) + ' dB tichšie ako druhé.' : '';
-    scheduleMeasure();
+  function renderPlan() {
+    const S = cur, d = planOf(S, minOf(S) * 60), ol = $('plan'); ol.innerHTML = '';
+    const items = [
+      ['Rozbeh', d.intro, 'Pomalé naladenie. Dych sa postupne dostáva do rytmu a tóny začínajú svoj pohyb.'],
+      ['Jadro', d.core, 'Hlavný rytmus: ' + S.rhythm + '.'],
+      ['Doznievanie', d.outro, 'Dych sa upokojí, zvuk sa stíši a prehrávanie skončí samo.']
+    ];
+    if (minOf(S) === 0) { items[1][1] = 0; items[2] = ['Ukončenie', 0, 'Relácia nemá koniec. Zastavíš ju sám tlačidlom Ukončiť.']; }
+    items.forEach(([n, sec, t]) => { const li = document.createElement('li'); li.innerHTML = '<b></b> <span></span>'; li.querySelector('b').textContent = n + (minOf(S) === 0 ? (n === 'Jadro' ? ' (bez konca)' : '') : ' (asi ' + Math.max(1, Math.round(sec / 60)) + ' min)') + ':'; li.querySelector('span').textContent = t; ol.appendChild(li); });
+    $('how').textContent = 'Ako dýchať: ' + S.how;
   }
-  function setFreq(key, v) {
-    if (!isFinite(v)) { renderFreq(); return; }
-    st[key] = clampF(v); renderFreq(); save(); scheduleRebuild();
+  const TAGS = { ok: ['Štúdie', 'ok'], tr: ['Tradícia', 'tr'], own: ['Naše', 'own'] };
+  function renderWhy() {
+    const box = $('why'); box.innerHTML = '';
+    cur.why.forEach(([k, t]) => { const p = document.createElement('p'); const tg = document.createElement('span'); tg.className = 'tag ' + TAGS[k][1]; tg.textContent = TAGS[k][0]; p.appendChild(tg); p.appendChild(document.createTextNode(t)); box.appendChild(p); });
+    const a = document.createElement('p'); a.innerHTML = 'Viac o tom, čo je overené a čo nie: <a href="#" id="whyAbout">Čo presne počuješ a ako to funguje</a>'; box.appendChild(a);
+    $('whyAbout').addEventListener('click', e => { e.preventDefault(); show('about'); });
   }
-  [['fl', fl], ['fr', fr]].forEach(([k, el]) => {
-    el.addEventListener('change', () => setFreq(k, parseF(el.value)));
-    el.addEventListener('keydown', e => { if (e.key === 'Enter') el.blur(); });
-    el.addEventListener('focus', () => el.select());
-  });
-  document.querySelectorAll('[data-step]').forEach(btn => btn.addEventListener('click', () => {
-    const [k, d] = btn.dataset.step.split(':'); setFreq(k, st[k] + parseFloat(d));
-  }));
-  const presets = $('presets');
-  const MONO = [136.1, 285, 396, 417, 432, 440, 528, 639, 741, 852, 963];
-  function buildPresets() {
-    presets.innerHTML = '';
-    const mk = (text, attr, val, fn) => {
-      const el = document.createElement('button'); el.type = 'button'; el.className = 'chip'; el.dataset[attr] = val; el.textContent = text;
-      el.addEventListener('click', fn); presets.appendChild(el);
+  function rampMin(S) { const t = minOf(S) * 60, r = t > 0 ? Math.min(300, 0.4 * t) : 300; return Math.max(1, Math.round(r / 60)); }
+  function renderHear() {
+    const S = cur, h = $('hear'), rel = engine && playing && actx ? actx.currentTime - engine.t0 : 0, b = engine ? engine.beatAt(rel) : S.beat[0];
+    const g = st.guide, glabel = g === 'wave' ? 'Šum vlnenia: pri nádychu sa zosilní a rozjasní, pri výdychu sa vytratí do ticha.' : g === 'tone' ? 'Jemný tón: pri nádychu stúpa a zosilňuje, pri výdychu klesá.' : 'Vypnuté. Dych sleduješ len podľa kruhu.';
+    const nat = LAYERS.filter(l => lvOf(S, l.id) > 0).map(l => l.label.toLowerCase() + ' ' + lvOf(S, l.id) + ' %');
+    h.innerHTML = '';
+    const add = (t, body) => { const d = document.createElement('div'); const bb = document.createElement('b'); bb.textContent = t; const p = document.createElement('span'); p.innerHTML = body; d.appendChild(bb); d.appendChild(p); h.appendChild(d); };
+    add('Dva tóny, každý do iného ucha', 'Ľavé ucho <span class="v">' + fmt(S.fl) + ' Hz</span>, pravé ucho <span class="v">' + fmt(S.fl + b) + ' Hz</span>. Rozdiel je <span class="v">' + fmt(b) + ' Hz</span>, takže mozog vníma vlnenie ' + fmt(b) + '-krát za sekundu (pásmo ' + bandOf(b) + '). V prvých ' + rampMin(S) + ' min relácie sa rozdiel plynule mení z ' + S.beat[0] + ' na ' + S.beat[1] + ' Hz a potom ostáva stály.');
+    add('Vedenie dychu', glabel);
+    add('Signály nádychu a výdychu', st.markLv > 0 ? 'Pri každej zmene krátky tón: <b>stúpajúci</b> znamená nádych, <b>klesajúci</b> výdych, <b>rovný vyšší tón</b> zadržanie a <b>rovný nižší tón</b> pauzu. Dych by si tak mal vedieť sledovať aj so zavretými očami.' : 'Vypnuté. Zmenu fázy vieš vyčítať len zo šumu a z kruhu.');
+    add('Zvuky prírody', nat.length ? nat.join(', ') + '. Len ako jemné pozadie.' : 'Vypnuté.');
+    add('Rytmus', S.rhythm + '.');
+  }
+  setInterval(() => { if (playing) tickPlay(); if (cur && $('sess').dataset.on === '1' && playing) renderHear(); }, 1000);
+
+  // ---------- upraviť
+  function renderEdit() {
+    const S = cur, lens = $('lens'); lens.innerHTML = '';
+    LENGTHS.forEach(m => { const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = lenLabel(m); c.setAttribute('aria-pressed', String(minOf(S) === m));
+      c.addEventListener('click', () => { if (playing || paused) return; st.min[S.id] = m; save(); renderEdit(); renderPlan(); }); lens.appendChild(c); });
+    const gb = $('guides'); gb.innerHTML = '';
+    [['wave', 'Šum vlnenia'], ['tone', 'Jemný tón'], ['off', 'Bez zvuku']].forEach(([k, t]) => { const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = t; c.setAttribute('aria-pressed', String(st.guide === k));
+      c.addEventListener('click', () => { st.guide = k; save(); if (engine) engine.setGuide(k); renderEdit(); renderHear(); }); gb.appendChild(c); });
+    const sl = $('sliders'); sl.innerHTML = '';
+    const slider = (label, hint, get, set) => {
+      const row = document.createElement('div'); row.className = 'row';
+      const l = document.createElement('div'); l.className = 'l'; l.innerHTML = '<label></label><span></span>'; l.querySelector('label').textContent = label; l.querySelector('span').textContent = hint; row.appendChild(l);
+      const inp = document.createElement('input'); inp.type = 'range'; inp.min = 0; inp.max = 100; inp.step = 1; inp.value = get(); inp.setAttribute('aria-label', label);
+      const out = document.createElement('output'); out.textContent = get() + ' %';
+      inp.addEventListener('input', () => { set(+inp.value); out.textContent = inp.value + ' %'; save(); });
+      row.appendChild(inp); row.appendChild(out); sl.appendChild(row);
     };
-    if (st.mode === 'mono') MONO.forEach(f => mk(String(f).replace('.', ',') + ' Hz', 'f', f, () => { st.fl = f; renderFreq(); save(); scheduleRebuild(); }));
-    else PRESETS.forEach(([n, b]) => mk(n + ' ' + String(b).replace('.', ',') + ' Hz', 'b', b, () => { st.fr = clampF(st.fl + b); renderFreq(); save(); scheduleRebuild(); }));
+    slider('Tóny do uší', 'dva tóny, z ktorých vzniká vlnenie', () => st.toneLv, v => { st.toneLv = v; if (engine) engine.setTone(v); });
+    slider('Vedenie dychu', 'šum alebo tón', () => st.breathLv, v => { st.breathLv = v; if (engine) engine.setBreath(v); });
+    slider('Signály nádychu a výdychu', 'tón pri každej zmene', () => st.markLv, v => { st.markLv = v; if (engine) engine.setMarks(v); renderHear(); });
+    LAYERS.forEach(l => slider(l.label, 'zvuky prírody', () => lvOf(S, l.id), v => {
+      st.lv[S.id] = Object.assign({}, st.lv[S.id], { [l.id]: v }); if (engine) { engine.setLayerLevel(l.id, v); if (v > 0) ensureLayer(l.id); } renderHear();
+    }));
   }
-  const modes = $('modes');
-  [['bin', 'Dve frekvencie'], ['mono', 'Jedna frekvencia']].forEach(([m, t]) => {
-    const el = document.createElement('button'); el.type = 'button'; el.className = 'chip'; el.dataset.mode = m; el.textContent = t;
-    el.addEventListener('click', () => {
-      st.mode = m; st.fl = clampF(st.fl); st.fr = clampF(st.fr);
-      buildPresets(); renderFreq(); save(); scheduleRebuild();
-    });
-    modes.appendChild(el);
-  });
-  const oct = $('octaves');
-  [['× ½', 0.5], ['× 2', 2]].forEach(([t, k]) => {
-    const el = document.createElement('button'); el.type = 'button'; el.className = 'chip'; el.textContent = t;
-    el.addEventListener('click', () => setFreq('fl', st.fl * k)); oct.appendChild(el);
-  });
 
-  // --- posuvníky
-  const SVGNS = 'http://www.w3.org/2000/svg';
-  const sliders = [];
-  function syncSliders() { sliders.forEach(f => f()); }
-  function sliderRow(parent, id, label, icon, min, max, get, set, unit) {
-    const row = parent;
-    const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = 1; inp.id = 'sl-' + id; inp.value = get();
-    const out = document.createElement('output'); out.htmlFor = inp.id;
-    const show = () => { out.textContent = (get() > 0 && unit === 'dB' ? '+' : '') + get() + (unit === 'dB' ? ' dB' : unit); };
-    show();
-    sliders.push(() => { inp.value = get(); show(); });
-    inp.addEventListener('input', () => { set(+inp.value); show(); save(); renderFreq(); scheduleRebuild(); });
-    if (icon) {
-      const svg = document.createElementNS(SVGNS, 'svg'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
-      const p = document.createElementNS(SVGNS, 'path'); p.setAttribute('d', icon); svg.appendChild(p); row.appendChild(svg);
-      const lab = document.createElement('label'); lab.htmlFor = inp.id; lab.textContent = label; row.appendChild(lab);
+  // ---------- prehrávač
+  const RING = { in: ['#7fd6c2', 'rgba(127,214,194,.38)'], out: ['#f0b96b', 'rgba(240,185,107,.32)'], hold: ['#e9edf9', 'rgba(233,237,249,.28)'], rest: ['#5b6fa8', 'rgba(91,111,168,.25)'], free: ['#93a0c6', 'rgba(147,160,198,.18)'] };
+  const playBtn = $('play'), stopBtn = $('stop'), bcircle = $('bcircle'), blabel = $('blabel'), bcount = $('bcount');
+  function setBtn() {
+    const on = playing && !paused;
+    playBtn.dataset.state = on ? 'on' : 'off';
+    playBtn.setAttribute('aria-label', on ? 'Pozastaviť' : paused ? 'Pokračovať' : 'Spustiť');
+    stopBtn.dataset.on = (playing || paused) ? '1' : '0';
+  }
+  function drawIdle() {
+    bcircle.style.transform = 'scale(.55)'; bcircle.style.removeProperty('--ring'); bcircle.style.removeProperty('--glow'); blabel.textContent = finishedFlag ? 'Hotovo' : 'Pripravené'; bcount.textContent = ''; $('remain').textContent = ''; $('attn').textContent = '';
+    stagesBox.childNodes.forEach(s => s.dataset.on = '0');
+  }
+  function ensureCtx() {
+    if (!actx) {
+      const C = window.AudioContext || window.webkitAudioContext;
+      actx = new C(); dest = actx.createMediaStreamDestination(); audio.srcObject = dest.stream;
     }
-    row.appendChild(inp); row.appendChild(out);
-    return inp;
+    if (actx.state !== 'running') { const p = actx.resume(); if (p && p.catch) p.catch(() => {}); }
   }
-  const mix = $('mix');
-  const TONE_ICON = 'M3 12h3l2-6 3 12 3-9 2 3h5';
-  const WAVE_ICON = 'M3 12c2-6 4-6 6 0s4 6 6 0 4-6 6 0';
-  [['tone', 'Frekvencia', TONE_ICON, () => st.tone, v => { st.tone = v; }]].concat(
-    LAYERS.map(l => [l.id, l.label, l.icon, () => st.lv[l.id], v => { st.lv[l.id] = v; }]),
-    [['breath', 'Dych', WAVE_ICON, () => st.breathLv, v => { st.breathLv = v; }],
-     ['mark', 'Signály', 'M4 12h3l3-7 4 14 3-7h3', () => st.markLv, v => { st.markLv = v; }]]
-  ).forEach(([id, label, icon, get, set]) => {
-    const row = document.createElement('div'); row.className = 'row'; mix.appendChild(row);
-    sliderRow(row, id, label, icon, 0, 100, get, set, '%');
-  });
-  function plainRow(el, id, label, hint, min, max, get, set, unit) {
-    const l = document.createElement('div'); l.className = 'l'; l.innerHTML = '<label for="sl-' + id + '">' + label + '</label><span>' + hint + '</span>';
-    el.appendChild(l); sliderRow(el, id, null, null, min, max, get, set, unit);
+  async function loadLayerBuf(l) {
+    const resp = await fetch(l.file); if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.arrayBuffer();
+    return await new Promise((res, rej) => { const p = actx.decodeAudioData(data, res, rej); if (p && p.then) p.then(res, rej); });
   }
-  plainRow($('rowMaster'), 'master', 'Celková hlasitosť', 'strop hlasitosti celého zvuku', 0, 100, () => st.master, v => { st.master = v; }, '%');
-  plainRow($('rowBal'), 'bal', 'Vyváženie uší', 'ľavé ← → pravé', -12, 12, () => st.bal, v => { st.bal = v; }, 'dB');
-  const auto = $('auto'); auto.checked = !!st.auto;
-  auto.addEventListener('change', () => { st.auto = auto.checked; save(); renderFreq(); scheduleRebuild(); });
-  st.gapless = true;
-
-  // --- časovač
-  const TIMERS = [[0, '∞'], [15, '15 min'], [30, '30 min'], [45, '45 min'], [60, '60 min'], [90, '90 min']];
-  const tbox = $('timers'); let endAt = 0;
-  function renderTimers() {
-    tbox.innerHTML = '';
-    TIMERS.forEach(([m, t]) => {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = t;
-      b.setAttribute('aria-pressed', String(st.timer === m));
-      b.addEventListener('click', () => { st.timer = m; save(); if (playing) armTimer(); renderTimers(); tick(); });
-      tbox.appendChild(b);
-    });
-  }
-  function armTimer() { endAt = st.timer > 0 ? Date.now() + st.timer * 60000 : 0; }
-  function tick() {
-    const el = $('left');
-    if (!playing || !endAt) { el.textContent = ''; return; }
-    const ms = endAt - Date.now();
-    if (ms <= 0) { endAt = 0; audio.pause(); setStatus('Časovač skončil, zvuk je zastavený.'); el.textContent = ''; return; }
-    const s = Math.ceil(ms / 1000);
-    el.textContent = 'Zostáva ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
-  }
-  setInterval(tick, 1000);
-  document.addEventListener('visibilitychange', tick);
-  audio.addEventListener('timeupdate', () => { if (endAt && Date.now() >= endAt) tick(); });
-
-  // --- prehrávanie
-  const playBtn = $('play'), wrap = $('playwrap');
-  let playing = false, swapping = false, busy = false, curUrl = null, session = 0, rebuildT = 0, actx = null, dest = null, gsrc = null, bStart = null, bRaf = 0;
-  const wait = ms => new Promise(r => setTimeout(r, ms));
-  function setStatus(t) { $('status').textContent = t; }
-  function setBtn(state) {
-    playBtn.dataset.state = state;
-    playBtn.setAttribute('aria-label', state === 'on' ? 'Zastaviť' : state === 'busy' ? 'Pripravujem zvuk' : 'Spustiť');
-    wrap.dataset.on = state === 'on' ? '1' : '0';
+  async function ensureLayer(id) {
+    if (!actx || loading[id]) return;
+    if (bufs[id]) { if (engine) engine.addLayer(id, bufs[id]); return; }
+    const l = LAYERS.find(x => x.id === id); loading[id] = 1;
+    try { const ab = await loadLayerBuf(l); bufs[id] = makeLoopBuf(actx, ab, l.L); if (engine) engine.addLayer(id, bufs[id]); }
+    catch (e) { $('status').textContent = 'Zvuk „' + l.label.toLowerCase() + '“ sa nepodarilo načítať.'; }
   }
   function meta() {
     if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
     try {
-      navigator.mediaSession.metadata = new MediaMetadata({ title: 'Generátor Šťastia', artist: 'L ' + fmt(st.fl) + ' Hz · P ' + fmt(effR()) + ' Hz' });
-      navigator.mediaSession.setActionHandler('play', () => audio.play().catch(() => {}));
-      navigator.mediaSession.setActionHandler('pause', () => audio.pause());
-      navigator.mediaSession.setActionHandler('stop', () => audio.pause());
+      navigator.mediaSession.metadata = new MediaMetadata({ title: cur.name + ' · ' + cur.purpose, artist: 'Generátor Šťastia' });
+      navigator.mediaSession.setActionHandler('play', () => { if (paused) resume(); });
+      navigator.mediaSession.setActionHandler('pause', () => { if (playing && !paused) pause(); });
+      navigator.mediaSession.setActionHandler('stop', () => endSession());
     } catch (e) {}
   }
-  const silentUrl = URL.createObjectURL(wavBlob(new Int16Array(SR)));
+  async function startSession() {
+    ensureCtx();
+    const pl = audio.play(); if (pl && pl.catch) pl.catch(() => {});
+    const S = cur, lv = {}; LAYERS.forEach(l => { lv[l.id] = lvOf(S, l.id); });
+    engine = new Engine(actx, dest, S, { total: minOf(S) * 60, toneLv: st.toneLv, breathLv: st.breathLv, markLv: st.markLv, guide: st.guide, lv: lv, bufs: bufs }).start();
+    LAYERS.forEach(l => { if (lv[l.id] > 0) ensureLayer(l.id); });
+    playing = true; paused = false; finishedFlag = false; setBtn(); meta();
+    $('status').textContent = 'Hrá. Môžeš zavrieť oči a zamknúť obrazovku.';
+    renderPlan(); renderHear(); kick();
+  }
+  function pause() { if (!actx) return; actx.suspend(); audio.pause(); paused = true; setBtn(); $('status').textContent = 'Pozastavené.'; }
+  function resume() { if (!actx) return; actx.resume(); const pl = audio.play(); if (pl && pl.catch) pl.catch(() => {}); paused = false; setBtn(); $('status').textContent = 'Hrá. Môžeš zavrieť oči a zamknúť obrazovku.'; kick(); }
+  function endSession() {
+    if (engine) { engine.stop(); engine = null; }
+    if (actx && actx.state === 'suspended') actx.resume();
+    audio.pause();
+    playing = false; paused = false; setBtn(); drawIdle(); $('status').textContent = 'Ukončené.';
+  }
+  function finished() {
+    if (engine) { engine.stop(); engine = null; }
+    audio.pause();
+    playing = false; paused = false; finishedFlag = true; setBtn(); drawIdle(); $('status').textContent = 'Relácia skončila. Pomaly otvor oči a daj si chvíľu, kým vstaneš.';
+  }
+  playBtn.addEventListener('click', () => { if (!cur) return; if (!playing) startSession(); else if (paused) resume(); else pause(); });
+  stopBtn.addEventListener('click', () => endSession());
 
-  function prepCtx() {
-    if (actx) { if (actx.state === 'suspended') actx.resume(); return; }
-    const C = window.AudioContext || window.webkitAudioContext;
-    try { actx = new C({ sampleRate: SR }); } catch (e) { actx = new C(); }
-    actx.resume(); dest = actx.createMediaStreamDestination();
+  function tickPlay() {
+    if (!engine || !actx) return;
+    const rel = actx.currentTime - engine.t0;
+    if (engine.finite && actx.currentTime > engine.tEnd) { finished(); return; }
+    if (!engine.finite && rel > engine.tl.total - EXT_AHEAD) engine.extend();
+    if (actx.state === 'interrupted' || (actx.state === 'suspended' && !paused)) { const p = actx.resume(); if (p && p.catch) p.catch(() => {}); }
   }
-  function stopGapless() { if (gsrc) { try { gsrc.stop(); gsrc.disconnect(); } catch (e) {} gsrc = null; } }
-
-  async function prepare(token) {
-    const need = LAYERS.filter(l => st.lv[l.id] > 0 && !cache[l.id] && !failed[l.id]);
-    for (let i = 0; i < need.length; i++) {
-      setStatus('Načítavam zvuky ' + (i + 1) + ' z ' + need.length + '…');
-      try { await loadLayer(need[i]); } catch (e) { failed[need[i].id] = 1; setStatus('Zvuk „' + need[i].label + '“ sa nepodarilo načítať.'); await wait(900); }
-      if (token !== session) return null;
-    }
-    setStatus('Generujem zvuk, chvíľu to trvá…'); await wait(40);
-    if (token !== session) return null;
-    return buildPcm(pcmParams());
-  }
-  async function render(startAt, token) {
-    const pcm = await prepare(token);
-    if (!pcm || token !== session) return;
-    meta();
-    if (st.gapless) {
-      swapping = true; prepCtx();
-      const buf = actx.createBuffer(2, N, SR), a = buf.getChannelData(0), b = buf.getChannelData(1);
-      for (let i = 0; i < N; i++) { a[i] = pcm[2 * i] / 32768; b[i] = pcm[2 * i + 1] / 32768; }
-      stopGapless();
-      gsrc = actx.createBufferSource(); gsrc.buffer = buf; gsrc.loop = true; gsrc.connect(dest); gsrc.start(); bStart = actx.currentTime;
-      if (audio.srcObject !== dest.stream) { audio.pause(); audio.removeAttribute('src'); audio.srcObject = dest.stream; audio.loop = false; }
-      swapping = false; busy = false;
-      const p = audio.play(); if (p && p.catch) p.catch(fail);
-      if (curUrl) { URL.revokeObjectURL(curUrl); curUrl = null; }
-      return;
-    }
-    stopGapless();
-    if (audio.srcObject) audio.srcObject = null;
-    const url = URL.createObjectURL(wavBlob(pcm)), old = curUrl; curUrl = url; swapping = true;
-    audio.addEventListener('loadedmetadata', function h() {
-      try { if (startAt) audio.currentTime = startAt % LOOP; } catch (e) {}
-      const done = () => { swapping = false; busy = false; if (old) URL.revokeObjectURL(old); };
-      const p = audio.play(); if (p && p.then) p.then(done, e => { done(); fail(e); }); else done();
-    }, { once: true });
-    audio.src = url; audio.loop = true; audio.load();
-  }
-  function fail() {
-    playing = false; busy = false; swapping = false; setBtn('off'); endAt = 0; tick();
-    setStatus('Prehrávanie sa nespustilo. Klepni na Spustiť ešte raz.');
-  }
-  function start() {
-    session++; const token = session; busy = true; playing = true; bStart = null;
-    setBtn('busy'); setStatus('Pripravujem zvuk…');
-    if (st.gapless) prepCtx();
-    swapping = true; stopGapless(); if (audio.srcObject) audio.srcObject = null;
-    audio.src = silentUrl; audio.loop = true; audio.play().catch(() => {});   // odomknutie prehrávača priamo v kliku (iOS)
-    armTimer();
-    render(0, token).catch(e => { fail(); setStatus('Chyba pri príprave zvuku: ' + (e && e.message)); });
-  }
-  function stop() {
-    session++; playing = false; busy = false; swapping = false; clearTimeout(rebuildT); endAt = 0; bStart = null;
-    stopGapless(); audio.pause(); setBtn('off'); setStatus('Zastavené.'); tick(); drawIdle();
-  }
-  function scheduleRebuild(now) {
-    clearTimeout(rebuildT);
-    if (!playing) return;
-    rebuildT = setTimeout(function go() {
-      if (!playing) return;
-      if (busy) { rebuildT = setTimeout(go, 600); return; }
-      busy = true; setStatus('Aplikujem zmenu…');
-      const token = ++session, at = st.gapless ? 0 : (audio.currentTime || 0);
-      render(at, token).catch(e => { fail(); setStatus('Chyba: ' + (e && e.message)); });
-    }, now ? 50 : 600);
-  }
-  function showOn() { if (playing && !busy && !swapping) { setBtn('on'); setStatus('Hrá. Môžeš zamknúť obrazovku.'); bKick(); } }
-  audio.addEventListener('playing', showOn);
-  audio.addEventListener('timeupdate', () => { if (playBtn.dataset.state !== 'on') showOn(); });
-  audio.addEventListener('play', () => { if (!playing) { playing = true; if (!endAt) armTimer(); } });
-  audio.addEventListener('pause', () => {
-    if (swapping) return;
-    if (playing) { playing = false; setBtn('off'); if (!endAt) setStatus('Pozastavené.'); tick(); drawIdle(); }
-  });
-  playBtn.addEventListener('click', () => { if (playing) stop(); else start(); });
-
-  // --- dýchanie: vzorce (rytmus je v DSP), účel, odporúčané tóny a text
-  const BUI = {
-    zostup:     { purpose: 'Uvoľnenie stresu',    desc: 'Nádych je stále 4 s, výdych sa každým dychom predlžuje zo 6 na 14 s a potom sa vracia späť. Ako schádzanie po schodoch dole.', set: { fl: 200, beat: 8,  lv: { birds: 0,  chimes: 0 },  timer: 15 } },
-    prazdnota:  { purpose: 'Hlboká meditácia',    desc: 'Nádych 5 s, výdych 10 s a pauza naprázdno 5 s. Sú to tri dychy za minútu. Nechaj myseľ odplávať.', set: { fl: 150, beat: 6,  lv: { birds: 0,  chimes: 20 }, timer: 30 } },
-    hojdacka:   { purpose: 'Obyčajné uvoľnenie',  desc: 'Nádych 4 s, výdych 6 s, bez pauzy. Ako kývanie sem a tam. Nič nerieš, len nasleduj kruh.', set: { fl: 200, beat: 10, lv: { birds: 20, chimes: 0 },  timer: 15 } },
-    uder:       { purpose: 'Energia a razancia',  desc: 'Nádych nosom 2 s, ostrý výdych ústami 1 s („HA“ so stiahnutím brucha), spolu 30-krát. Potom 10 s napni celé telo a 20 s dýchaj voľne. Keď sa ti zatočí hlava, dýchaj pokojne.', set: { fl: 250, beat: 20, lv: { birds: 0,  chimes: 0 },  timer: 15 } },
-    pokles:     { purpose: 'Zaspávanie',          desc: 'Nádych 4 s, výdych 8 s, pauza 3 s. Pri každom výdychu v duchu odpočítavaj od 20 smerom dole. Skús, ako ďaleko sa dostaneš.', set: { fl: 150, beat: 2,  lv: { birds: 0,  chimes: 0 },  timer: 45 } },
-    horizont:   { purpose: 'Ultra bdelosť',       desc: 'Nádych nosom 4 s a ešte 2 s navrch, zadrž 6 s a pomaly vydychuj 12 s. Pozornosť presúvaš každých 5 minút: telo, miestnosť, priestor nad tebou.', set: { fl: 200, beat: 30, lv: { birds: 0,  chimes: 25 }, timer: 15 } },
-    zaostrenie: { purpose: 'Lepšie učenie',       desc: 'Nádych 4 s, zadržanie 2 s, výdych 6 s. Dávaj si ho 5 minút pred učením a jeden dych ako reset každých 10 minút počas učenia.', set: { fl: 200, beat: 16, lv: { birds: 0,  chimes: 0 },  timer: 30 } }
-  };
-  const BNAME = { zostup: 'Zostup', prazdnota: 'Prázdnota', hojdacka: 'Hojdačka', uder: 'Úder', pokles: 'Pokles', horizont: 'Horizont', zaostrenie: 'Zaostrenie' };
-  const BBORDER = ['zostup', 'prazdnota', 'hojdacka', 'uder', 'pokles', 'horizont', 'zaostrenie'];
-  const HORIZONT = ['Pozornosť na tele: cíť, ako sa dvíha a klesá.', 'Pozornosť v miestnosti: počuj priestor okolo seba.', 'Pozornosť v otvorenom priestore nad tebou: obloha a ticho.'];
-  const bcircle = $('bcircle'), blabel = $('blabel'), bcount = $('bcount'), bhint = $('bhint');
-  const RING = { in: ['#7fd6c2', 'rgba(127,214,194,.38)'], out: ['#f0b96b', 'rgba(240,185,107,.32)'], hold: ['#e9edf9', 'rgba(233,237,249,.28)'], rest: ['#5b6fa8', 'rgba(91,111,168,.25)'], free: ['#93a0c6', 'rgba(147,160,198,.18)'] };
-  function setRing(k) { const C = RING[k]; bcircle.style.setProperty('--ring', C[0]); bcircle.style.setProperty('--glow', C[1]); }
-  function drawIdle() {
-    setRing('in');
-    bcircle.style.transform = 'scale(.55)'; blabel.textContent = st.breath ? 'Pripravené' : ''; bcount.textContent = ''; bhint.textContent = '';
-  }
-  function drawBreath() {
-    const P = BREATH[st.breath], el = actx.currentTime - bStart, t = (el < 0 ? 0 : el) % P.total;
-    let sg = P.segs[0];
-    for (let i = 0; i < P.segs.length; i++) { if (t >= P.segs[i].start) sg = P.segs[i]; else break; }
-    const x = Math.min(1, (t - sg.start) / sg.dur), e = sg.free ? 0.45 : sg.e0 + (sg.e1 - sg.e0) * sm(x);
+  function draw() {
+    raf = 0;
+    if (!engine || !playing || paused || !actx || document.hidden) return;
+    const rel = actx.currentTime - engine.t0;
+    if (rel < 0) { blabel.textContent = 'Pripravujem'; bcount.textContent = ''; raf = requestAnimationFrame(draw); return; }
+    const ph = engine.phaseAt(rel);
+    if (!ph) { bcircle.style.transform = 'scale(.55)'; blabel.textContent = 'Doznieva'; bcount.textContent = ''; bcircle.style.removeProperty('--ring'); bcircle.style.removeProperty('--glow'); $('remain').textContent = ''; raf = requestAnimationFrame(draw); return; }
+    const x = Math.min(1, (rel - ph.start) / ph.dur), e = ph.free ? 0.45 : ph.e0 + (ph.e1 - ph.e0) * sm(x);
     bcircle.style.transform = 'scale(' + (0.5 + 0.5 * e).toFixed(3) + ')';
-    blabel.textContent = sg.label;
-    setRing(sg.free ? 'free' : sg.e1 > sg.e0 + 1e-6 ? 'in' : sg.e1 < sg.e0 - 1e-6 ? 'out' : sg.e0 > 0.5 ? 'hold' : 'rest');
-    bcount.textContent = sg.dur >= 3 ? String(Math.max(1, Math.ceil(sg.dur - (t - sg.start)))) : '';
-    bhint.textContent = st.breath === 'horizont' ? HORIZONT[Math.floor(Math.max(0, el) / 300) % 3] : '';
+    const kind = ph.free ? 'free' : ph.e1 > ph.e0 + 1e-6 ? 'in' : ph.e1 < ph.e0 - 1e-6 ? 'out' : ph.e0 > 0.5 ? 'hold' : 'rest', C = RING[kind];
+    bcircle.style.setProperty('--ring', C[0]); bcircle.style.setProperty('--glow', C[1]);
+    blabel.textContent = (ph.label === 'Napni telo' || ph.label === 'Voľne dýchaj') ? ph.label : '';
+    bcount.textContent = ph.dur >= 3 ? String(Math.max(1, Math.ceil(ph.dur - (rel - ph.start)))) : '';
+    stagesBox.childNodes.forEach(s => s.dataset.on = s.dataset.k === ph.stage ? '1' : '0');
+    $('remain').textContent = engine.finite ? 'Zostáva ' + mmss(engine.tl.total - rel) : 'Uplynulo ' + mmss(rel);
+    $('attn').textContent = (cur.attn && ph.stage === 'core') ? cur.attn[Math.floor(Math.max(0, rel) / 300) % cur.attn.length] : '';
+    raf = requestAnimationFrame(draw);
   }
-  function bLoop() {
-    bRaf = 0;
-    if (!st.breath || !playing || bStart == null || !actx || document.hidden) { if (!playing || bStart == null) drawIdle(); return; }
-    drawBreath(); bRaf = requestAnimationFrame(bLoop);
-  }
-  function bKick() { if (!bRaf && st.breath && playing && bStart != null) bRaf = requestAnimationFrame(bLoop); }
-  document.addEventListener('visibilitychange', bKick);
-  const bchips = $('bchips');
-  function buildBreathChips() {
-    const mk = (id, text, small) => {
-      const el = document.createElement('button'); el.type = 'button'; el.className = 'chip'; el.dataset.b = id;
-      el.textContent = text; if (small) { const sm2 = document.createElement('small'); sm2.textContent = small; el.appendChild(sm2); }
-      el.addEventListener('click', () => applyBreath(id)); bchips.appendChild(el);
-    };
-    mk('', 'Vypnuté', '');
-    BBORDER.forEach(id => mk(id, BUI[id].purpose, BNAME[id]));
-  }
-  function renderBreath() {
-    const id = st.breath, U = BUI[id];
-    bchips.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.b === id)));
-    $('bwrap').style.display = U ? '' : 'none';
-    if (!U) { $('bdesc').textContent = ''; $('bname').textContent = ''; drawIdle(); return; }
-    const S = U.set, snd = [];
-    LAYERS.forEach(l => { if (S.lv[l.id] > 0) snd.push(l.label.toLowerCase() + ' ' + S.lv[l.id] + ' %'); });
-    $('bname').textContent = BNAME[id] + ' · ' + U.purpose;
-    $('bdesc').textContent = U.desc + ' Nastavené: tóny ' + fmt(S.fl) + ' a ' + fmt(S.fl + S.beat) + ' Hz (' + bandOf(S.beat) + '), ' + (snd.length ? snd.join(', ') + ', ' : 'bez zvukov prírody, ') + 'časovač ' + S.timer + ' min. Čokoľvek z toho si môžeš dolaďovať nižšie.';
-    if (!playing || bStart == null) drawIdle(); else bKick();
-  }
-  function applyBreath(id) {
-    st.breath = id;
-    const U = BUI[id];
-    if (U) {
-      const S = U.set;
-      st.mode = 'bin'; st.fl = clampF(S.fl); st.fr = clampF(S.fl + S.beat);
-      st.lv = Object.assign({}, defaults.lv, S.lv); st.timer = S.timer;
-      buildPresets(); renderTimers(); syncSliders();
-      if (playing) armTimer();
-      tick();
-    }
-    renderFreq(); renderBreath(); save(); scheduleRebuild();
-  }
-  buildBreathChips(); renderBreath();
+  function kick() { if (!raf) raf = requestAnimationFrame(draw); }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { tickPlay(); kick(); } });
 
-  buildPresets(); renderFreq(); renderTimers(); setBtn('off');
+  show('home');
 })();
 </script>
 </body>
